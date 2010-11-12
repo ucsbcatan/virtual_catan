@@ -6,7 +6,7 @@
 
 #include <iostream>
 #include "card.h"
-include namespace std;
+using namespace std;
 
 class Deck {
  public:

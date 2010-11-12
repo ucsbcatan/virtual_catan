@@ -10,15 +10,16 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+
 using namespace std;
 
-
-enum playerNum { PLAYER0, PLAYER1, PLAYER2, PLAYER3, PLAYER4};
+enum playerNum { PLAYER0, PLAYER1, PLAYER2, PLAYER3, NOONE};
 enum pieceType {SETTLEMENT, CITY, ROAD, BANDIT};
-enum cardType { BRICK, GRAIN, LUMBER, STONE, WOOL, KNIGHT, MONOPOLY, PROGRESS, ROAD_BUILDING,
-YEAR_OF_PLENTY };
+enum resourceType {BRICK, GRAIN, LUMBER, STONE, WOOL};
+enum terr {HILLS, FIELD, FOREST, MOUNTAINS, PASTURE, DESERT};
+enum devType { KNIGHT, MONOPOLY, PROGRESS, ROAD_BUILDING, YEAR_OF_PLENTY };
 
-struct PieceHand1{
+struct Piece{
 int cityPiece;
 int settlementPiece;
 int roadPiece;
@@ -26,20 +27,30 @@ bool robberPiece;
 
 };
 
-struct CardHand1{
-bool longestRoadCard;
-bool largestArmyCard;
-int victoryPointCard;
-int progressCard;
-int stoneCard;
-int grainCard;
-int lumberCard;
-int woolCard;
-int brickCard;
-int knightCard;
-int monopolyCard;
-int roadBuildingCard;
-int yearOfPlentyCard;
+struct Card{
+    bool longestRoadCard;
+    bool largestArmyCard;
+    int stoneCard;
+    int grainCard;
+    int lumberCard;
+    int woolCard;
+    int brickCard;
+    /*int hillsTerrCard;
+    int grainTerrCard;
+    int lumberTerrCard;
+    int mountainsTerrCard;
+    int pastureTerrCard;
+    int desertTerrCard;*/
+
+};
+
+struct Dev {
+    int knightCard;
+    int monopolyCard;
+    int roadBuildingCard;
+    int yearOfPlentyCard;
+    int victoryPointCard;
+    int progressCard;
 };
 
 class Player{
@@ -48,23 +59,28 @@ public:
 Player();
 Player(string name);
 
+int getScore();
 int makeRoll();
 int pickRandCard();
-void promptPlayer();
 int getAmountPieces(Player player);
+void addRec(terr terrType);
+void promptPlayer();
+void recIn(resourceType playerCard);
+void recOut(resourceType playerCard);
 void setScore(int currentScore);
-int getScore();
-unsigned int playerNum;
+
 string getName();
-PieceHand1 PieceHand;
-CardHand1 CardHand;
+resourceType resource;
+playerNum turnNum;
+int devType;
+Dev DevHand;
+Piece PieceHand;
+Card CardHand;
 
 
 private:
 int nextPlayerTurn;
 int numberTurn;
-int PlayerID;
-int roll;
 int individualScore;
 string playerName;
 
@@ -72,8 +88,8 @@ string playerName;
 
 
 
-
-
+/////Dev Card stuff
+//
 
 
 

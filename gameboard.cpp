@@ -8,24 +8,28 @@ Gameboard::Gameboard()
     setVertLayer();
     setEdgeLayer();
     int i;
-    for(i=0;i<4;i++)
+    for(i=0;i<3;i++)
         unassTerrain.push_back(HILLS);
-    for(i=0;i<5;i++)
-        unassTerrain.push_back(FIELD);
-    for(i=0;i<5;i++)
-        unassTerrain.push_back(FOREST);
+    cout << "size of unass after hills insert is " << unassTerrain.size() << endl;
     for(i=0;i<4;i++)
+        unassTerrain.push_back(FIELD);
+        cout << "size of unass after field insert is " << unassTerrain.size() << endl;
+    for(i=0;i<4;i++)
+        unassTerrain.push_back(FOREST);
+        cout << "size of unass forest insert is " << unassTerrain.size() << endl;
+    for(i=0;i<3;i++)
         unassTerrain.push_back(MOUNTAINS);
-    for(i=0;i<5;i++)
+    cout << "size of unass mountains insert is " << unassTerrain.size() << endl;
+    for(i=0;i<4;i++)
         unassTerrain.push_back(PASTURE);
+        cout << "size of unass pasture is " << unassTerrain.size() << endl;
     unassTerrain.push_back(DESERT);
+    cout << "size of unassTerrain prior to assignments is " << unassTerrain.size() << endl;
     assTerrain();
     setYield();
     setBandit();
 
 }
-
-
 
 HEXAGON::HEXAGON(int hexNum){
     hexId=hexNum;
@@ -186,6 +190,7 @@ HEXAGON::HEXAGON(int hexNum){
 
 VERTEX::VERTEX(int vertNum) {
     vertId=vertNum;
+    occupiedBy = NOONE;
     if(vertNum == 0){
         adjEdge.push_back(0);
         adjEdge.push_back(6);
@@ -443,6 +448,7 @@ VERTEX::VERTEX(int vertNum) {
 
 EDGE::EDGE(int edgeNum){
     edgeId=edgeNum;
+    occupiedBy=NOONE;
     if(edgeNum==0){
         adjVert.push_back(0);
         adjVert.push_back(1);
@@ -919,17 +925,27 @@ void Gameboard::setEdgeLayer()
 
 void Gameboard::assTerrain()
 {
-    int terrAss;
-    int toMod=19;
+    int terrAss; //index for unassTerrain
     for(int i=0;i<19;i++){
-        srand(time(NULL));
-        terrAss=rand()%toMod;
-        hexLayer[i].terrType=unassTerrain[terrAss];
-        unassTerrain.erase(unassTerrain.begin()+terrAss);
-        toMod=toMod-1;
-        if(terrAss == DESERT)
-            desHex=i;
+            srand(time(NULL));
+            terrAss=rand()%unassTerrain.size();
+           // if (i==1 && terrAss==17 ) //disallows desert from being at hexagon 1
+             //   terrAss=16; //sets as pasture
+            hexLayer[i].terrType=unassTerrain[terrAss];
+            if(unassTerrain[terrAss] == DESERT)
+                desHex=i;
+            if((i=1) and desHex!=unassTerrain[terrAss]){
+                cout << "something broke, terrAss is " << terrAss << endl;
+                cout << "desHex is "  << desHex;
+                cout << "and hexagon 0 is " << hexLayer[0].terrType << endl;
+                cout << "length of unassTerrain is " << unassTerrain.size() << endl;
+                break;
+            }
+            unassTerrain.erase(unassTerrain.begin()+terrAss);
     }
+    cout << "desert hexagon is " << desHex <<endl;
+    cout << "hexagon " << desHex << "is " << hexLayer[desHex].terrType << endl;
+
 }
 
 void Gameboard::setYield()
@@ -948,8 +964,8 @@ void Gameboard::setYield()
         hexAss=rand()%availHex.size();
         YIELDNUM ynum(i,availHex[hexAss]);
         yieldNums.push_back(ynum);
+        hexLayer[availHex[hexAss]].yieldNum=i;
         availHex.erase(availHex.begin()+hexAss);
-        hexLayer[hexAss].yieldNum=i;
     }
      i=3;
      int holdAss1; //holds number of assigned hex
@@ -974,4 +990,79 @@ void Gameboard::setYield()
 void Gameboard::setBandit()
 {
     hexLayer[desHex].hasBandit=true;
+    banditLoc=desHex;
+}
+
+int Gameboard::moveBandit(int hexNum)
+{
+    if(banditLoc==hexNum)
+        return 1;
+    hexLayer[banditLoc].hasBandit=false;
+    hexLayer[hexNum].hasBandit=true;
+    banditLoc=hexNum;
+    return 0;
+}
+
+terr Gameboard::getTerrain(int hexId)
+{
+    return hexLayer[hexId].terrType;
+}
+
+int Gameboard::getBanditLoc()
+{
+    return banditLoc;
+}
+
+int Gameboard::validSettle(playerNum currPlayer, int vertNum)
+{
+    //cout << "checking if occupied vertex\n";
+    if (vertLayer[vertNum].occupiedBy!= NOONE)
+            return 1; //vertex is occupied, cout accordingly
+    //cout<< "checking nearby vertices\n";
+    for (int i=0;i<(int)(vertLayer[vertNum].adjEdge.size());i++){ //loop through adjacent edges
+        for (int j=0;j<2;j++){ //loop through adjacent vertices
+            if ((vertLayer[edgeLayer[vertLayer[vertNum].adjEdge[i]].adjVert[j]].occupiedBy)!= NOONE)
+                return 2; //one of the surrounding vertices is occupied, cout accordingly
+        }
+    }
+    //cout << "checking for nearby roads\n";
+    for (int i=0;i<(int)(vertLayer[vertNum].adjEdge.size());i++){
+        if ((edgeLayer[vertLayer[vertNum].adjEdge[i]].occupiedBy)!= currPlayer){ //whatever represents the current player
+            //cout << "finished checking for nearby roads\n";
+            return 3; //the player's road does not lead to this vertex, cout accordingly
+        }
+    }
+    //cout << "all clear, valid local\n";
+    return 0; //vertex is a valid settlement site
+}
+
+int Gameboard::validRoad(playerNum currPlayer, int edgeNum)
+{
+    if (edgeLayer[edgeNum].occupiedBy!= NOONE)
+            return 1; //edge is occupied, cout accordingly
+    for (int i=0;i<2;i++){
+        for (unsigned int j=0;j< (vertLayer[edgeLayer[edgeNum].adjVert[i]].adjEdge.size());i++)
+            if ((edgeLayer[vertLayer[edgeLayer[edgeNum].adjVert[i]].adjEdge[j]].occupiedBy)!= currPlayer) //whatever represents current player
+                return 2; //edge is not adjacent to player's road, cout accordingly
+    }
+    return 0; //edge is a valid settlement site
+}
+
+vector<int> Gameboard::getAssVert(int hexNum)
+{
+    return hexLayer[hexNum].assVert;
+}
+
+vector<int> Gameboard::getAssEdge(int vertNum){
+    return vertLayer[vertNum].adjEdge;
+}
+
+void Gameboard::setSettle(playerNum currPlayer,int vertNum)
+{
+    vertLayer[vertNum].occupiedBy=currPlayer;
+}
+
+void Gameboard::setRoad(playerNum currPlayer, int edgeNum)
+{
+    edgeLayer[edgeNum].occupiedBy=currPlayer;
 }
