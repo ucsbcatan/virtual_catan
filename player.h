@@ -54,7 +54,8 @@ void promptPlayer();
 int getAmountPieces(Player player);
 void setScore(int currentScore);
 int getScore();
-int playerNum;
+unsigned int playerNum;
+string getName();
 PieceHand1 PieceHand;
 CardHand1 CardHand;
 

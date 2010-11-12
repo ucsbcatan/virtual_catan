@@ -6,41 +6,62 @@
 #define GAMEBOARD_H
 #include <vector>
 #include <iostream>
+#include <stdlib.h>
+#include <time.h>
 using namespace std;
 
-enum terr {DESERT, HILLS, FIELD, MOUNTAINS, PASTURE};
-typedef struct{
-    Hexagon(int hexNum);
+enum terr {HILLS, FIELD, FOREST, MOUNTAINS, PASTURE, DESERT};
+struct HEXAGON{
+    HEXAGON (int);
     int hexId;
     terr terrType;
-    vector<VERTEX> assVert; //vector of associated vertices
-}HEXAGON;
+    bool hasBandit;
+    vector<int> assVert; //vector of associated vertices
+    int yieldNum;
+};
 
-typedef struct{
-    Vertex(int vertNum);
+struct VERTEX{
+    VERTEX ();
+    VERTEX (int);
     int vertId;
     vector<int> adjEdge; //vector of adjacent edges
-}VERTEX;
+    //playerNum occupied = player0;
+};
 
-typedef struct{
-    Edge(int edgeNum);
+struct EDGE{
+    EDGE ();
+    EDGE (int);
     int edgeId;
-    vector<int> assEdge; //vector of associated edges
+    //vector<int> assEdge; //vector of associated edges **not using** delete some time
     vector<int> adjVert; //vector of adjacent vertices
-}EDGE;
+};
+
+struct YIELDNUM{
+    YIELDNUM (int,int, int);
+    YIELDNUM (int,int);
+    int num;
+    HEXAGON hex1(int);
+    HEXAGON hex2(int);
+};
 
 class Gameboard {
  public:
-  void Gameboard();
-  void setTile(terr tile);
-  bool hasBandit();
-  int getTerrain();
-  void connectHexagon();
-  void findHexagon();
+  Gameboard();
+  void moveBandit(HEXAGON hexNum);
+  int getTerrain(int hexId);
  private:
-  vector<HEXAGON> hexLayer;
-  vector<
-  int id;
-  int terrainEnum;
+  void setHexLayer();
+  void setVertLayer();
+  void setEdgeLayer();
+  void setYield();
+  void setBandit();
+  void assTerrain();
+  vector<HEXAGON> hexLayer; //vector containing all hexagons
+  vector<VERTEX> vertLayer; //vector containing all veticess
+  vector<EDGE> edgeLayer; //vcetor containging all edges
+  vector<YIELDNUM> yieldNums; //vector containing all yield numbers
+  vector<terr> unassTerrain; //vector containing terrain yet to be assigned
+  int desHex; //hexagon holding desert tile
 };
 #endif
+

@@ -4,6 +4,7 @@
  // CATAN_H
 
 #include "player.h"
+#include "gameboard.h"
 #include <iostream>
 #include <stdlib.h>
 #include <vector>
@@ -16,21 +17,20 @@ public:
     Catan(int numPlayersIn, vector<string> namesIn);
     void InitializeHand();
     int currentScore();
-    void pringPlayerName();
     int currentTime(int clockID);
     void saveGame();
     int getScore();
     string findLongestRoad();
     Player declareWinner(int playerID);
 
-protected:
-    //int getScore();
-    //void setScore(int point, Player myPlayer);
+
+        vector<Player> myplayerList;
+        unsigned int numPlayers;
+        Gameboard board;
 
 private:
     int clockID;
-    int numPlayers;
-    vector<Player> playerList;
+
     map<int, Player> playerTurnList;
 
         };

@@ -102,28 +102,59 @@ void Options(){
     return;
 }
 
+
 void GameState(Catan GameProfile){
-    cout<<"you made it to the gamestate!!\n\n";
-    bool firstTurn = true;
-    while(firstTurn){
-    //roll who goes first (order for game is chosen)
-    //player 1 -> 4 places settlement and road
-    //player 4 -> 1 places settlement and road
-    firstTurn=false;
-    }
+
+      cout<<"\n\nyou made it to the gamestate!!\n\n";
+      cout.flush();
+      int currentPlayerRoll; // integer player rolled
+      pair<map<int, Player>::iterator, bool> ret;
+      vector<Player>::iterator it;
+      map<int, Player> playerTurnList;
+      int counter = 0;
+
+
+      for(vector<Player>::iterator it = (GameProfile.myplayerList).begin(); it != (GameProfile.myplayerList).end(); it++) {
+
+              cout << "\n\n" << (*it).getName() << ", type 'roll' to roll the die" << endl;
+              cin.get();
+              currentPlayerRoll = (*it).makeRoll();
+              cout << "/nyou rolled a:" << currentPlayerRoll;
+              playerTurnList.insert(pair<int, Player>(currentPlayerRoll, (*it)));
+            }
+
+       GameProfile.myplayerList.clear();
+       for (map<int, Player>::iterator it2 = playerTurnList.end(); it2 != playerTurnList.begin(); it2--) {
+
+              (it2->second).playerNum = (GameProfile.numPlayers - counter);
+              GameProfile.myplayerList.push_back(it2->second);
+              counter++;
+          }
+
+       //Next iteration, turn conflict resolution
+
+       //Players 1->i place settlement down
+       //Players i->1 place settlement down
+
+       //all players recieve recourses associated with their settlements
+       //(firstTurnRecourses)<-call this from Gameboard
+
+
+
+
+
+
+
     bool inGame = true;
     while(inGame){
-        //sweet
+
+        cout<<"";
+        int dickslang;
+        cin>>dickslang;
 
 
 
 
-
-
-
-
-
-    inGame = false;
     }
     return;
 }

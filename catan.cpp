@@ -12,38 +12,34 @@ Catan::Catan(){
 }
 
 Catan::Catan(int numPlayersIn, vector<string> namesIn) {
-int currentPlayerRoll, counter = 0;
-pair<map<int, Player>::iterator, bool> ret;
+    numPlayers = numPlayersIn;
 
-for (vector<string>::iterator it = namesIn.begin(); it != namesIn.end(); it++)
-{
-Player player(*it);
-currentPlayerRoll = player.makeRoll();
-playerTurnList.insert(pair<int, Player>(currentPlayerRoll, (*it)));
-}
-vector<Player>::iterator it;
-for (map<int, Player>::iterator it2 = playerTurnList.begin(); it2 != playerTurnList.end(); it2++) {
-(it2->second).playerNum = (numPlayersIn - counter);
-playerList.insert(it, it2->second);
-counter++;
-}
+    pair<map<int, Player>::iterator, bool> ret;
+    vector<Player>::iterator it2;
 
-for (vector<Player>::iterator it = playerList.begin(); it !=
-playerList.end(); it++) {
-(*it).PieceHand.cityPiece = 4;
-(*it).PieceHand.settlementPiece = 5;
-(*it).PieceHand.roadPiece = 13;
-(*it).CardHand.longestRoadCard = 0;
-(*it).CardHand.largestArmyCard = 0;
-(*it).CardHand.progressCard = 0;
-(*it).CardHand.monopolyCard = 0;
-(*it).CardHand.knightCard = 0;
-(*it).CardHand.yearOfPlentyCard = 0;
-(*it).CardHand.roadBuildingCard = 0;
+    for (vector<string>::iterator it = namesIn.begin(); it != namesIn.end(); it++)
+    {
+        Player player(*it);
+        myplayerList.push_back(player);
+        it2++;
+    }
+
+
+/*for (vector<Player>::iterator it = myplayerList.begin(); it != myplayerList.end(); it++) {
+    (*it).PieceHand.cityPiece = 4;
+    (*it).PieceHand.settlementPiece = 5;
+    (*it).PieceHand.roadPiece = 13;
+    (*it).CardHand.longestRoadCard = 0;
+    (*it).CardHand.largestArmyCard = 0;
+    (*it).CardHand.progressCard = 0;
+    (*it).CardHand.monopolyCard = 0;
+    (*it).CardHand.knightCard = 0;
+    (*it).CardHand.yearOfPlentyCard = 0;
+    (*it).CardHand.roadBuildingCard = 0;*/
 
 // initialize resource cards when they place their house
 }
-}
+
 
 
 string Catan::findLongestRoad() {
@@ -56,7 +52,7 @@ if ((((*it).CardHand).longestRoadCard) == 1);
 }
 
 void Catan::InitializeHand() {
-for (vector<Player>::iterator it = playerList.begin(); it != playerList.end(); it++) {
+for (vector<Player>::iterator it = myplayerList.begin(); it != myplayerList.end(); it++) {
 
 // for loop ( 3 times )
 /*switch() {

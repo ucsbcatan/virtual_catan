@@ -9,6 +9,7 @@ Player::Player() {
 Player::Player(string name) {
 playerName = name;
 }
+
 void Player::setScore(int currentScore) {
 //score = currentScore;
 return;
@@ -20,7 +21,7 @@ return;
 
 int Player::makeRoll() {
 srand(time(NULL)); //srand((unsigned)time(NULL));
-int d = 1 + rand()%7; // number between 1 and 6;
+int d = 1 + rand()%6; // number between 1 and 6;
 return d;
 }
 
@@ -31,8 +32,6 @@ random = rand() % 6; //number between 0 and 5;
 return random;
 }
 
-
-
-
-
-
+string Player::getName() {
+    return playerName;
+}
