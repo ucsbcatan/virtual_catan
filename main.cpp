@@ -1,26 +1,26 @@
 #include <QtCore/QCoreApplication>
 #include <QtGui/QFont>
-#include "iostream"
+#include <iostream>
 #include <vector>
-#include "fstream"
+#include <fstream>
 
 #include "catan.h"
 
-
 using namespace std;
 
- bool inMenu = true;
+ bool inMenu;
  void MainMenu();
  void NewGame();
  void LoadGame();
  void Options();
- void GameState();
+ void GameState(Catan);
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
     //Main Menu
+    inMenu = true;
     MainMenu();
 
     cout<<"\nthank-you for playing!";
@@ -62,6 +62,8 @@ void NewGame(){
     string input;
     cin>>input;
 
+
+
     if(input.compare("QuickMatch")==0){            //these three will eventually be QTevents
     cout<<"\nHow many players? (1-4)\n\n"; int i;
     cin>>i;
@@ -74,9 +76,12 @@ void NewGame(){
         namesIn.push_back(in);
     }
     Catan GameProfile(i,namesIn);
-    GameProfile.printPlayerName();
-    GameState();
+    GameState(GameProfile);
     }
+
+
+
+
     if(input.compare("CustomGame")==0){
 
     }
@@ -97,10 +102,28 @@ void Options(){
     return;
 }
 
-void GameState(){
+void GameState(Catan GameProfile){
     cout<<"you made it to the gamestate!!\n\n";
-    bool dick = true;
-    while(dick){
-        //sweet
+    bool firstTurn = true;
+    while(firstTurn){
+    //roll who goes first (order for game is chosen)
+    //player 1 -> 4 places settlement and road
+    //player 4 -> 1 places settlement and road
+    firstTurn=false;
     }
+    bool inGame = true;
+    while(inGame){
+        //sweet
+
+
+
+
+
+
+
+
+
+    inGame = false;
+    }
+    return;
 }
