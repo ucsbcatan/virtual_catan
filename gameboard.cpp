@@ -10,19 +10,14 @@ Gameboard::Gameboard()
     int i;
     for(i=0;i<3;i++)
         unassTerrain.push_back(HILLS);
-    cout << "size of unass after hills insert is " << unassTerrain.size() << endl;
     for(i=0;i<4;i++)
         unassTerrain.push_back(FIELD);
-        cout << "size of unass after field insert is " << unassTerrain.size() << endl;
     for(i=0;i<4;i++)
         unassTerrain.push_back(FOREST);
-        cout << "size of unass forest insert is " << unassTerrain.size() << endl;
     for(i=0;i<3;i++)
         unassTerrain.push_back(MOUNTAINS);
-    cout << "size of unass mountains insert is " << unassTerrain.size() << endl;
     for(i=0;i<4;i++)
         unassTerrain.push_back(PASTURE);
-        cout << "size of unass pasture is " << unassTerrain.size() << endl;
     unassTerrain.push_back(DESERT);
     cout << "size of unassTerrain prior to assignments is " << unassTerrain.size() << endl;
     assTerrain();
@@ -928,18 +923,19 @@ void Gameboard::assTerrain()
     int terrAss; //index for unassTerrain
     for(int i=0;i<19;i++){
             srand(time(NULL));
-            terrAss=rand()%unassTerrain.size();
-           // if (i==1 && terrAss==17 ) //disallows desert from being at hexagon 1
-             //   terrAss=16; //sets as pasture
+            terrAss=rand()%(int)unassTerrain.size();
+            cout << "terrAss selected to be " << terrAss << endl;
             hexLayer[i].terrType=unassTerrain[terrAss];
+            cout << "hexagon should be set to " << unassTerrain[terrAss] << endl;
+            cout << "hexagon " << i << " is set to " << hexLayer[i].terrType << endl;
             if(unassTerrain[terrAss] == DESERT)
                 desHex=i;
-            if((i=1) and desHex!=unassTerrain[terrAss]){
+            if((terrAss==(int)unassTerrain.size()) and desHex!=unassTerrain[terrAss]){
                 cout << "something broke, terrAss is " << terrAss << endl;
                 cout << "desHex is "  << desHex;
                 cout << "and hexagon 0 is " << hexLayer[0].terrType << endl;
                 cout << "length of unassTerrain is " << unassTerrain.size() << endl;
-                break;
+
             }
             unassTerrain.erase(unassTerrain.begin()+terrAss);
     }
@@ -1040,12 +1036,19 @@ int Gameboard::validRoad(playerNum currPlayer, int edgeNum)
 {
     if (edgeLayer[edgeNum].occupiedBy!= NOONE)
             return 1; //edge is occupied, cout accordingly
+
+    //just used for checking first road placement
+    for (int i=0;i<2;i++)
+        if (vertLayer[edgeLayer[edgeNum].adjVert[i]].occupiedBy==currPlayer)
+            return 2; //first road placement or subsequent ones is valid
+
     for (int i=0;i<2;i++){
         for (unsigned int j=0;j< (vertLayer[edgeLayer[edgeNum].adjVert[i]].adjEdge.size());i++)
-            if ((edgeLayer[vertLayer[edgeLayer[edgeNum].adjVert[i]].adjEdge[j]].occupiedBy)!= currPlayer) //whatever represents current player
-                return 2; //edge is not adjacent to player's road, cout accordingly
+            if (((edgeLayer[vertLayer[edgeLayer[edgeNum].adjVert[i]].adjEdge[j]].occupiedBy)!= currPlayer))
+                return 3; //edge is not adjacent to player's road, cout accordingly
     }
-    return 0; //edge is a valid settlement site
+     //
+    return 0; //edge is a valid road site
 }
 
 vector<int> Gameboard::getAssVert(int hexNum)

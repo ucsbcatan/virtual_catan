@@ -79,4 +79,3 @@ class Gameboard {
   int banditLoc; //hexagon location of bandit
 };
 #endif
-
