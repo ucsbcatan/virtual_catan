@@ -137,6 +137,7 @@ void GameState(Catan GameProfile){
 
           if (currentPlayerRoll == maxRolled ) {
               counter++;
+
               GameProfile.turnplayerList.insert(GameProfile.turnplayerList.begin()+counter, *it);
           }
 

@@ -68,7 +68,8 @@ void promptPlayer();
 void recIn(resourceType playerCard);
 void recOut(resourceType playerCard);
 void setScore(int currentScore);
-
+void setTurn(int num);
+playerNum getTurn();
 string getName();
 resourceType resource;
 playerNum turnNum;
@@ -80,7 +81,6 @@ Card CardHand;
 
 private:
 int nextPlayerTurn;
-int numberTurn;
 int individualScore;
 string playerName;
 

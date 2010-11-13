@@ -75,3 +75,11 @@ void Player::addRec(terr terrType){
     //else if (terrType = DESERT)
     return;
 }
+
+playerNum Player::getTurn(){
+    return turnNum;
+}
+
+void Player::setTurn(int num){
+    turnNum=(playerNum)num;
+}
