@@ -15,6 +15,7 @@ using namespace std;
  void LoadGame();
  void Options();
  void GameState(Catan);
+ void Trade(Catan GameProfile, vector<Player> playerList, int numPlayers, int currentPlayer);
 
 
 
@@ -115,34 +116,39 @@ void GameState(Catan GameProfile){
       cout<<"\n\nyou made it to the gamestate!!\n\n";
       cout.flush();
       int currentPlayerRoll; // integer player rolled
-
-      map<int, Player> playerTurnList;
+      string nameOfMaxPlayer;
+      int maxRolled = 0; // maximum number rolled
+      string inroll;
+      //vector<Player> turnPlayerList;
       int counter = 0;
-string inroll;
 
-      for(vector<Player>::iterator it = (GameProfile.myplayerList).begin(); it != (GameProfile.myplayerList).end(); it++) {
-
-              cout << "\n\n" << (*it).getName() << ", type 'roll' to roll the die" << endl;
-              cin >> inroll;
-              currentPlayerRoll = (*it).makeRoll();
-              cout << "\nyou rolled a:" << currentPlayerRoll;
-              playerTurnList.insert(pair<int, Player>(currentPlayerRoll, (*it)));
-            }
-
-       GameProfile.myplayerList.clear();
-
-       for (map<int, Player>::reverse_iterator ret= playerTurnList.rbegin(); ret != playerTurnList.rend(); ret++) {
-             (ret->second).turnNum = (playerNum)(GameProfile.numPlayers - counter);
-             GameProfile.myplayerList.push_back(ret->second);
-             counter++;
+      cout << "players are: " << endl;
+      for (int i=0;i<3;i++)
+          cout << GameProfile.myplayerList[i].getName() << endl;
+      for (vector<Player>::iterator it = (GameProfile.myplayerList).begin(); it != (GameProfile.myplayerList).end(); it++) {
+          cout << "\n\n" << (*it).getName() << ", type 'roll' to roll the die" << endl;
+          cin >> inroll;
+          currentPlayerRoll = (*it).makeRoll();
+          cout << "you rolled a " << currentPlayerRoll << endl;
+          if (currentPlayerRoll > maxRolled) {
+              maxRolled = currentPlayerRoll;
+              GameProfile.turnplayerList.insert(GameProfile.turnplayerList.begin(),*it);
           }
-/*for (vector<Player>::iterator it = (GameProfile.myplayerList).begin(); it != (GameProfile.myplayerList).end(); it++)
-    cout << (*it).getName() << endl;*/
-        //Next iteration, turn conflict resolution
+
+          if (currentPlayerRoll == maxRolled ) {
+              counter++;
+              GameProfile.turnplayerList.insert(GameProfile.turnplayerList.begin()+counter, *it);
+          }
+
+          if (currentPlayerRoll < maxRolled) {
+              GameProfile.turnplayerList.push_back(*it);
+          }
+                    cout << "turn order is " << (*it).getName() << endl;
+      }
 
        //Players 1->i place settlement down////////////////////////////////////////////////////////////////////
 
-       cout << "\nHexagon Number" << "\t" << "Terrain" << "\n";
+       cout << "\nHexagon Number" << "\t\t" << "Terrain" << "\n";
        terr myTerr;
        for(int i = 0; i<19 ; i++){
            myTerr = GameProfile.board.getTerrain(i);
@@ -160,10 +166,11 @@ string inroll;
                cout << "PASTURE\t";
            else if (myTerr == 5)
                cout << "DESERT\t";
+
            cout<<endl;
        }
 int hexchoice, vertchoice, edgechoice;
-for(vector<Player>::iterator k =(GameProfile.myplayerList).begin(); k!=(GameProfile.myplayerList).end(); k++){
+for(vector<Player>::iterator k =(GameProfile.turnplayerList).begin(); k!=(GameProfile.turnplayerList).end(); k++){
 
            cout << "current player: " << (*k).getName() << ", choose a hexagon (0-18) " << endl;
            cin >> hexchoice;
@@ -186,7 +193,7 @@ for(vector<Player>::iterator k =(GameProfile.myplayerList).begin(); k!=(GameProf
 }
 //Players i->1 place settlement down
 cout<<"\n\ngoing backwards\n\n";
-for (vector<Player>::reverse_iterator it8 = (GameProfile.myplayerList).rbegin(); it8 != (GameProfile.myplayerList).rend(); it8++) {
+for (vector<Player>::reverse_iterator it8 = (GameProfile.turnplayerList).rbegin(); it8 != (GameProfile.turnplayerList).rend(); it8++) {
     cout << (*it8).getName() << ", choose a hexagon (0-18) " << endl;
     cin >> hexchoice;
 
@@ -210,12 +217,6 @@ for (vector<Player>::reverse_iterator it8 = (GameProfile.myplayerList).rbegin();
 
        //all players recieve recourses associated with their settlements
        //(firstTurnResources)<-call this from Gameboard
-
-
-
-
-
-
     GameProfile.firstYield();
     bool inGame = true;
     string input;
@@ -223,9 +224,12 @@ for (vector<Player>::reverse_iterator it8 = (GameProfile.myplayerList).rbegin();
     int amountPlayers = GameProfile.numPlayers;
     int currentPlayer = 0;
     while(inGame){
+        GameProfile.yield();
         currentPlayer = nextPlayer;
-        cout << "Current Player Turn is: " << GameProfile.myplayerList[currentPlayer].getName() << endl;
-        cout << "\n\nOptions:     Which option do you want?:\n\nTrade\nBuild\nPlayDev\nBuy\nEndTurn\n   ";
+        cout << "Current Player Turn is: " << GameProfile.turnplayerList[currentPlayer].getName() << endl;
+        cout << "\nUse the following commands to finish your turn:";
+
+        cout<< "\n\nTrade\tBuild\tPlayDev\nBuy\tEndTurn\n   ";
         cin>>input;
 
         if (input.compare("EndTurn") == 0) {
@@ -233,18 +237,36 @@ for (vector<Player>::reverse_iterator it8 = (GameProfile.myplayerList).rbegin();
             nextPlayer = currentPlayer % amountPlayers;
         }
         if (input.compare("Trade") == 0)
-            ;
+            Trade(GameProfile, GameProfile.turnplayerList, amountPlayers, currentPlayer);
+
         if (input.compare("Build") == 0)
             ;
         if (input.compare("PlayDev") == 0)
             ;
         if (input.compare("Buy") == 0 )
             ;
-
+    }
 return;
 }
 
 
+
+
+
+
+
+void Trade(Catan GameProfile, vector<Player> playerList, int numPlayers, int currentPlayer) {
+    string playerInput;
+    cout << playerList[currentPlayer].getName() << ", who would you like to trade with?" << endl;
+    for (int j=0; j<numPlayers; j++) {
+        if (playerList[j].getName() != playerList[currentPlayer].getName())
+           cout << playerList[j].getName();
+    }
+    cin>>playerInput;
+    for (int k=0; k<numPlayers; k++) {
+        if (playerInput.compare(playerList[k].getName()) == 0)
+            GameProfile.trade(playerList[currentPlayer],playerList[k]);
+    }
 }
 
 
