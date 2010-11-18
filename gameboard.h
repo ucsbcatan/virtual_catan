@@ -9,13 +9,18 @@
 #include <stdlib.h>
 #include <time.h>
 #include "player.h"
+
 using namespace std;
 
 
 struct HEXAGON{
-    HEXAGON (int);
-    int hexId;
-    terr terrType;
+    HEXAGON (int);       //The initializer for the hexagon struct.  Passes in an integer that assigns
+                         //the hex ID (0-18).  Depending on which integer is passed an, a giant if block
+                         //assigns its associated vertices in the vector 'assVert'
+
+    int hexId;           //The hex ID that relates hexagon to it's spot on the board (integer 0-18)
+
+    terr terrType;       //holds the Terrain type that
     bool hasBandit;
     vector<int> assVert; //vector of associated vertices
     int yieldNum;
@@ -50,7 +55,6 @@ class Gameboard {
  public:
   Gameboard();
   int moveBandit(int hexNum);
-  terr getTerrain(int hexId);
   int getBanditLoc();
   int validSettle(playerNum currPlayer, int vertNum);
   int validFirstSettle(playerNum currPlayer, int vertNum);
@@ -59,9 +63,11 @@ class Gameboard {
   vector<int> getAssEdge(int vertNum);
   vector<HEXAGON> hexLayer; //vector containing all hexagons
   vector<VERTEX> vertLayer; //vector containing all vetices
+  vector<YIELDNUM> yieldNums; //vector containing all yield numbers
   void setSettle(playerNum currPlayer, int vertNum);
   void setCity(playerNum currPlayer, int vertNum);
   void setRoad(playerNum currPlayer, int edgeNum);
+  terr getTerrain(int hexId);
 
  private:
   void setHexLayer();
@@ -72,8 +78,7 @@ class Gameboard {
   void assTerrain();
 
 
-  vector<EDGE> edgeLayer; //vcetor containging all edges
-  vector<YIELDNUM> yieldNums; //vector containing all yield numbers
+  vector<EDGE> edgeLayer; //vector containging all edges
   vector<terr> unassTerrain; //vector containing terrain yet to be assigned
   int desHex; //hexagon holding desert tile
   int banditLoc; //hexagon location of bandit
