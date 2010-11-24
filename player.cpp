@@ -8,6 +8,7 @@ Player::Player() {
 
 Player::Player(string name) {
 playerName = name;
+turnNum=NOONE;
 }
 
 void Player::setScore(int currentScore) {
@@ -17,17 +18,18 @@ return;
 
 
 
-int Player::makeRoll() {
-srand(time(NULL)); //srand((unsigned)time(NULL));
-int d = 1 + rand()%6; // number between 1 and 6;
-return d;
-}
+//int Player::makeRoll() {
+//    timeval Time;
+//    srand(Time.tv_usec); //seed rand with the time in microsecs
+//    int d = 1 + rand()%6; // number between 1 and 6;
+//    return d;
+//}
 
 int Player::pickRandCard() {
-int random;
-srand(time(NULL)); // srand((unsigned)time(NULL));
-random = rand() % 6; //number between 0 and 5;
-return random;
+    int random;
+    srand(time(NULL)); // srand((unsigned)time(NULL));
+    random = rand() % 6; //number between 0 and 5;
+    return random;
 }
 
 string Player::getName() {
@@ -35,43 +37,43 @@ string Player::getName() {
 }
 void Player::recIn(resourceType playerCard) {
     if (playerCard == BRICK)
-        CardHand.brickCard = CardHand.brickCard + 1;
+        ResourceHand.brick++;
     else if (playerCard == GRAIN)
-        (CardHand.grainCard)++;
+        (ResourceHand.grain)++;
     else if (playerCard == LUMBER)
-        (CardHand.lumberCard)++;
+        (ResourceHand.lumber)++;
     else if (playerCard == STONE)
-        (CardHand.stoneCard)++;
+        (ResourceHand.stone)++;
     else if (playerCard == WOOL)
-        (CardHand.woolCard)++;
+        (ResourceHand.wool)++;
     return;
 }
 
 void Player::recOut(resourceType playerCard) {
    if (playerCard == BRICK)
-       (CardHand.brickCard)--;
+       (ResourceHand.brick)--;
    else if (playerCard == GRAIN)
-       (CardHand.grainCard)--;
+       (ResourceHand.grain)--;
    else if (playerCard == LUMBER)
-       (CardHand.lumberCard)--;
+       (ResourceHand.lumber)--;
    else if (playerCard == STONE)
-       (CardHand.stoneCard)--;
+       (ResourceHand.stone)--;
    else if (playerCard == WOOL)
-       (CardHand.woolCard)--;
+       (ResourceHand.wool)--;
     return;
 }
 
 void Player::addRec(terr terrType){
     if(terrType == HILLS)
-        (CardHand.brickCard)++;
+        (ResourceHand.brick)++;
     else if (terrType == FIELD)
-        (CardHand.grainCard)++;
-    else if (terrType = FOREST)
-        (CardHand.lumberCard)++;
-    else if (terrType = MOUNTAINS)
-        (CardHand.stoneCard)++;
-    else if (terrType = PASTURE)
-        (CardHand.woolCard)++;
+        (ResourceHand.grain)++;
+    else if (terrType == FOREST)
+        (ResourceHand.lumber)++;
+    else if (terrType == MOUNTAINS)
+        (ResourceHand.stone)++;
+    else if (terrType == PASTURE)
+        (ResourceHand.wool)++;
     //else if (terrType = DESERT)
     return;
 }
@@ -80,6 +82,11 @@ playerNum Player::getTurn(){
     return turnNum;
 }
 
-void Player::setTurn(int num){
-    turnNum=(playerNum)num;
+void Player::setTurn(playerNum num){
+    turnNum=num;
 }
+
+void Player::printHand(){
+
+}
+

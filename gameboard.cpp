@@ -19,7 +19,7 @@ Gameboard::Gameboard()
     for(i=0;i<4;i++)
         unassTerrain.push_back(PASTURE);
     unassTerrain.push_back(DESERT);
-    cout << "size of unassTerrain prior to assignments is " << unassTerrain.size() << endl;
+//    cout << "size of unassTerrain prior to assignments is " << unassTerrain.size() << endl;
     assTerrain();
     setYield();
     setBandit();
@@ -28,6 +28,7 @@ Gameboard::Gameboard()
 
 HEXAGON::HEXAGON(int hexNum){
     hexId=hexNum;
+    hasBandit=false;
     if (hexNum == 0){
         assVert.push_back(0);
         assVert.push_back(1);
@@ -180,12 +181,12 @@ HEXAGON::HEXAGON(int hexNum){
         assVert.push_back(52);
         assVert.push_back(51);
     }
-    //hexLayer.push_back(this);
 }
 
 VERTEX::VERTEX(int vertNum) {
     vertId=vertNum;
     occupiedBy = NOONE;
+    occByType=0;
     if(vertNum == 0){
         adjEdge.push_back(0);
         adjEdge.push_back(6);
@@ -317,9 +318,9 @@ VERTEX::VERTEX(int vertNum) {
         adjEdge.push_back(39);
     }
     else if(vertNum == 28){
-    adjEdge.push_back(39);
-    adjEdge.push_back(40);
-    adjEdge.push_back(49);
+        adjEdge.push_back(39);
+        adjEdge.push_back(40);
+        adjEdge.push_back(49);
     }
     else if(vertNum == 29){
         adjEdge.push_back(34);
@@ -737,13 +738,13 @@ EDGE::EDGE(int edgeNum){
 
 YIELDNUM::YIELDNUM(int id, int num1, int num2) {
     this->num = id;
-    HEXAGON hex1(num1);
-    HEXAGON hex2(num2);
+    hex1=num1;
+    hex2=num2;
 }
 
 YIELDNUM::YIELDNUM(int id, int num1) {
     this->num = id;
-    HEXAGON hex1(num1);
+    hex1=num1;
 }
 
 void Gameboard::setHexLayer()
@@ -924,12 +925,13 @@ void Gameboard::assTerrain()
     for(int i=0;i<19;i++){
             srand(time(NULL));
             terrAss=rand()%(int)unassTerrain.size();
-            cout << "terrAss selected to be " << terrAss << endl;
+//            cout << "terrAss selected to be " << terrAss << endl;
             hexLayer[i].terrType=unassTerrain[terrAss];
-            cout << "hexagon should be set to " << unassTerrain[terrAss] << endl;
-            cout << "hexagon " << i << " is set to " << hexLayer[i].terrType << endl;
+//            cout << "hexagon should be set to " << unassTerrain[terrAss] << endl;
+//            cout << "hexagon " << i << " is set to " << hexLayer[i].terrType << endl;
             if(unassTerrain[terrAss] == DESERT)
                 desHex=i;
+                hexLayer[i].yieldNum=7;
             if((terrAss==(int)unassTerrain.size()) and desHex!=unassTerrain[terrAss]){
                 cout << "something broke, terrAss is " << terrAss << endl;
                 cout << "desHex is "  << desHex;
@@ -939,8 +941,8 @@ void Gameboard::assTerrain()
             }
             unassTerrain.erase(unassTerrain.begin()+terrAss);
     }
-    cout << "desert hexagon is " << desHex <<endl;
-    cout << "hexagon " << desHex << "is " << hexLayer[desHex].terrType << endl;
+//    cout << "desert hexagon is " << desHex <<endl;
+//    cout << "hexagon " << desHex << "is " << hexLayer[desHex].terrType << endl;
 
 }
 
@@ -955,31 +957,47 @@ void Gameboard::setYield()
         if(i!=desHex)
             availHex.push_back(i);
     }
-    for(i=2;i<13;i+=10){
-        srand(time(NULL));
-        hexAss=rand()%availHex.size();
-        YIELDNUM ynum(i,availHex[hexAss]);
-        yieldNums.push_back(ynum);
-        hexLayer[availHex[hexAss]].yieldNum=i;
-        availHex.erase(availHex.begin()+hexAss);
-    }
-     i=3;
+
      int holdAss1; //holds number of assigned hex
      int holdAss2; //holds number of second assigned hex
-     while(availHex.size()!=0){
-        srand(time(NULL));
-        hexAss1=rand()%availHex.size();
-        holdAss1=availHex[hexAss1];
-        availHex.erase(availHex.begin()+hexAss1);
-        hexAss2=rand()%availHex.size();
-        holdAss2=availHex[hexAss2];
-        availHex.erase(availHex.begin()+hexAss2);
-        YIELDNUM ynum(i,holdAss1,holdAss2);
-        yieldNums.push_back(ynum);
-        hexLayer[hexAss1].yieldNum=i;
-        hexLayer[hexAss2].yieldNum=i;
+     //cout << "making yieldNum 2\n";
+     srand(time(NULL));
+     hexAss1=rand()%availHex.size();
+     holdAss1=availHex[hexAss1];
+     hexLayer[holdAss1].yieldNum=2;
+     availHex.erase(availHex.begin()+hexAss1);
+     YIELDNUM ynum(2,holdAss1);
+     yieldNums.push_back(ynum);
+     i=3;
+     //cout << "made yieldNum 2\n";
+     while((availHex.size()!=1)){
+         if(i!=7){
+            hexAss1=rand()%availHex.size();
+            holdAss1=availHex[hexAss1];
+            hexLayer[holdAss1].yieldNum=i;
+            availHex.erase(availHex.begin()+hexAss1);
+            hexAss2=rand()%availHex.size();
+            holdAss2=availHex[hexAss2];
+            hexLayer[holdAss2].yieldNum=i;
+            availHex.erase(availHex.begin()+hexAss2);
+            YIELDNUM znum(i,holdAss1,holdAss2);
+            yieldNums.push_back(znum);
+            hexLayer[holdAss1].yieldNum=i;
+            hexLayer[holdAss2].yieldNum=i;
+        }
         i++;
-    }
+     }
+     //cout << "made yieldNums 3-11\n";
+     //cout << "there are " << availHex.size() << " hexagons left.\n";
+     holdAss1=availHex[0];
+     hexLayer[holdAss1].yieldNum=12;
+     availHex.erase(availHex.begin());
+     YIELDNUM dbznum(12,holdAss1);
+     yieldNums.push_back(dbznum);
+//     if(availHex.empty())
+//         cout << "list of available hexagons is empty\n";
+//     else
+//         cout << "something went wrong, list of hexagons is not empty\n";
 }
 
 
@@ -1044,11 +1062,10 @@ int Gameboard::validRoad(playerNum currPlayer, int edgeNum)
 
     for (int i=0;i<2;i++){
         for (unsigned int j=0;j< (vertLayer[edgeLayer[edgeNum].adjVert[i]].adjEdge.size());i++)
-            if (((edgeLayer[vertLayer[edgeLayer[edgeNum].adjVert[i]].adjEdge[j]].occupiedBy)!= currPlayer))
-                return 3; //edge is not adjacent to player's road, cout accordingly
+            if (((edgeLayer[vertLayer[edgeLayer[edgeNum].adjVert[i]].adjEdge[j]].occupiedBy)== currPlayer))
+                return 0; //valid settlement location
     }
-     //
-    return 0; //edge is a valid road site
+    return 3; //there are none of the player's roads adjacent to any of these edges
 }
 
 vector<int> Gameboard::getAssVert(int hexNum)
@@ -1063,9 +1080,15 @@ vector<int> Gameboard::getAssEdge(int vertNum){
 void Gameboard::setSettle(playerNum currPlayer,int vertNum)
 {
     vertLayer[vertNum].occupiedBy=currPlayer;
+    vertLayer[vertNum].occByType=1;
 }
 
 void Gameboard::setRoad(playerNum currPlayer, int edgeNum)
 {
     edgeLayer[edgeNum].occupiedBy=currPlayer;
+}
+
+void Gameboard::setCity(playerNum currPlayer, int vertNum)
+{
+    vertLayer[vertNum].occByType=2;
 }

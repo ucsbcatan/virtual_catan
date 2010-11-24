@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
-
+#include <sys/time.h>
 using namespace std;
 
 enum playerNum { PLAYER0, PLAYER1, PLAYER2, PLAYER3, NOONE};
@@ -27,21 +27,12 @@ bool robberPiece;
 
 };
 
-struct Card{
-    bool longestRoadCard;
-    bool largestArmyCard;
-    int stoneCard;
-    int grainCard;
-    int lumberCard;
-    int woolCard;
-    int brickCard;
-    /*int hillsTerrCard;
-    int grainTerrCard;
-    int lumberTerrCard;
-    int mountainsTerrCard;
-    int pastureTerrCard;
-    int desertTerrCard;*/
-
+struct Resources{
+    int stone;
+    int grain;
+    int lumber;
+    int wool;
+    int brick;
 };
 
 struct Dev {
@@ -59,6 +50,8 @@ public:
 Player();
 Player(string name);
 
+bool longestRoadCard;
+bool largestArmyCard;
 int getScore();
 int makeRoll();
 int pickRandCard();
@@ -68,18 +61,19 @@ void promptPlayer();
 void recIn(resourceType playerCard);
 void recOut(resourceType playerCard);
 void setScore(int currentScore);
-void setTurn(int num);
+void setTurn(playerNum num);
+void printHand();
 playerNum getTurn();
 string getName();
 resourceType resource;
-playerNum turnNum;
 int devType;
 Dev DevHand;
 Piece PieceHand;
-Card CardHand;
+Resources ResourceHand;
 
 
 private:
+playerNum turnNum;
 int nextPlayerTurn;
 int individualScore;
 string playerName;
