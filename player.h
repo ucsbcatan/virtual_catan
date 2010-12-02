@@ -11,20 +11,19 @@
 #include <time.h>
 #include <string.h>
 #include <sys/time.h>
+#include <vector>
 using namespace std;
 
 enum playerNum { PLAYER0, PLAYER1, PLAYER2, PLAYER3, NOONE};
 enum pieceType {SETTLEMENT, CITY, ROAD, BANDIT};
 enum resourceType {BRICK, GRAIN, LUMBER, STONE, WOOL};
 enum terr {HILLS, FIELD, FOREST, MOUNTAINS, PASTURE, DESERT};
-enum devType { KNIGHT, MONOPOLY, PROGRESS, ROAD_BUILDING, YEAR_OF_PLENTY };
+enum devType { SOLDIER, VICTORYPOINT, MONOPOLY, ROAD_BUILDING, YEAR_OF_PLENTY };
 
 struct Piece{
 int cityPiece;
 int settlementPiece;
 int roadPiece;
-bool robberPiece;
-
 };
 
 struct Resources{
@@ -36,12 +35,12 @@ struct Resources{
 };
 
 struct Dev {
-    int knightCard;
+    int soldierCard;
+    int victoryPointCard;
     int monopolyCard;
     int roadBuildingCard;
     int yearOfPlentyCard;
-    int victoryPointCard;
-    int progressCard;
+    int size;
 };
 
 class Player{
@@ -50,8 +49,6 @@ public:
 Player();
 Player(string name);
 
-bool longestRoadCard;
-bool largestArmyCard;
 int getScore();
 int makeRoll();
 int pickRandCard();
@@ -65,17 +62,23 @@ void setTurn(playerNum num);
 void printHand();
 playerNum getTurn();
 string getName();
+
+bool hasLongestRoad;
+bool hasLargestArmy;
 resourceType resource;
 int devType;
+int numRoads;  //for longest road
+int victoryPoints;
 Dev DevHand;
+Dev DevPlayed;
 Piece PieceHand;
 Resources ResourceHand;
+vector<int> portsOwned;
 
 
 private:
 playerNum turnNum;
 int nextPlayerTurn;
-int individualScore;
 string playerName;
 
 };

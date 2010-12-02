@@ -2,6 +2,7 @@
 #include <QtCore/QCoreApplication>
 #include <QtGui/QFont>
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <fstream>
 #include "catan.h"
@@ -22,13 +23,12 @@ void MainMenu();
 void NewGame();
 void LoadGame();
 void Options();
-void GameState(Catan);
-void Trade(Catan GameProfile, vector<Player> playerList, int numPlayers, int currentPlayer);
+void GameState(Catan GameProfile);
+void Turn(Catan GameProfile, bool fromLoad);
 void buildRoad();
 void printBoard(Catan g);
 vector<string> makePlayers(int);
 string infO(Catan GameProfile, int a, int b);
-void printHand(Catan g);
 
 
         /*-----------------------------------*\
@@ -46,6 +46,9 @@ int main(int argc, char *argv[])
 
     //Main Menu
     menuOpen = true;
+
+
+
     MainMenu();
 
     return a.exec();
@@ -105,7 +108,7 @@ void NewGame(){
                 cin >>numPlayers;
             }
             vector<string> nameList=makePlayers(numPlayers);
-            Catan GameProfile(numPlayers,nameList);
+            Catan GameProfile(numPlayers,nameList,true);
             GameState(GameProfile);
         }
 
@@ -129,6 +132,22 @@ void NewGame(){
 
 
 void LoadGame(){
+    bool inLoadGame=true;
+    while(inLoadGame){
+        cout<< "\nWould you like to load your saved game? <Yes or No>\n      ";
+        string input;
+        cin>>input;
+
+        if(input.compare("Yes")==0){
+            Catan GameProfile(false);
+            Turn(GameProfile,true);
+        }
+        else if(input.compare("No")==0){
+            inLoadGame=false;
+        }
+        else
+            cout<< "Please enter either 'Yes' or 'No':\n      ";
+    }
     return;
 }
 
@@ -175,35 +194,12 @@ void GameState(Catan GameProfile){
       for (int i=0;i<(int)GameProfile.turnplayerList.size();i++){
           cout << GameProfile.turnplayerList[i].getName() << " is " << GameProfile.turnplayerList[i].getTurn() << endl;
       }
+
       delay(3);
-//      cout << "\nHexagon Number" << "\t\t" << "Terrain" << "\t\tYield Number\n";
-//      terr myTerr;
-//      for(int i = 0; i<19 ; i++){
-//          myTerr = GameProfile.board.getTerrain(i);
-//          cout << "\t" << i << "\t\t";
-
-//          if (myTerr == 0)
-//              cout << "HILLS    \t\t";
-//          else if (myTerr == 1)
-//              cout << "FIELD    \t\t";
-//          else if (myTerr == 2)
-//              cout << "FOREST   \t\t";
-//          else if (myTerr == 3)
-//              cout << "MOUNTAINS\t\t";
-//          else if (myTerr == 4)
-//              cout << "PASTURE  \t\t";
-//          else if (myTerr == 5)
-//              cout << "DESERT   \t\t";
-//          cout << GameProfile.board.hexLayer[i].yieldNum;
-//          cout<<endl;
-//      }
-
-      printBoard(GameProfile);
-
       int hexchoice, vertchoice, edgechoice;
 
       for (vector<Player>::iterator k =(GameProfile.turnplayerList).begin(); k!=(GameProfile.turnplayerList).end(); k++){
-
+          printBoard(GameProfile);
           cout << "current player: " << (*k).getName() << ", choose a hexagon (0-18) " << endl;
           cin >> hexchoice;
 
@@ -235,9 +231,12 @@ void GameState(Catan GameProfile){
           cin >> vertchoice;
           GameProfile.placeFirstSettlement(*k, vertchoice);
 
-          cout << "choose an available edge:\t";
-          for(int i = 0; i<(int)(GameProfile.board.getAssEdge(vertchoice).size()) ; i++)
-              cout<<GameProfile.board.getAssEdge(vertchoice)[i] << "\t";
+          cout << "choose an available edge (to place your road):\t";
+          for(int i = 0; i<(int)(GameProfile.board.getAssEdge(vertchoice).size()) ; i++){
+//              int validVal=GameProfile.board.validSettle((*k).getTurn(),GameProfile.board.getAssEdge(vertchoice)[i]);
+//              if ((validVal==0)||(validVal==2))
+                cout<<GameProfile.board.getAssEdge(vertchoice)[i] << "\t";
+          }
           cout<<endl;
           cin >> edgechoice;
           GameProfile.placeRoad(*k, edgechoice);
@@ -247,7 +246,7 @@ void GameState(Catan GameProfile){
       cout<<"\n\ngoing backwards\n\n";
 
       for (vector<Player>::reverse_iterator it8 = (GameProfile.turnplayerList).rbegin(); it8 != (GameProfile.turnplayerList).rend(); it8++) {
-
+         printBoard(GameProfile);
          cout << (*it8).getName() << ", choose a hexagon (0-18) " << endl;
          cin >> hexchoice;
          cout << "choose an available vertex:\t";
@@ -293,8 +292,11 @@ void GameState(Catan GameProfile){
             break;
     }
     cout << "choose an available edge (to place your road):\t";
-    for(int i = 0; i<(int)(GameProfile.board.getAssEdge(vertchoice).size()) ; i++)
-        cout<< GameProfile.board.getAssEdge(vertchoice)[i] << "\t";
+    for(int i = 0; i<(int)(GameProfile.board.getAssEdge(vertchoice).size()) ; i++){
+//        int validVal=GameProfile.board.validSettle((*k).getTurn(),GameProfile.board.getAssEdge(vertchoice)[i]);
+//        if ((validVal==0)||(validVal==2))
+          cout<<GameProfile.board.getAssEdge(vertchoice)[i] << "\t";
+    }
     cout<<endl;
     cin >> edgechoice;
     GameProfile.placeRoad(*it8,edgechoice);
@@ -310,17 +312,27 @@ void GameState(Catan GameProfile){
          cout << "Wool:\t" << GameProfile.turnplayerList[i].ResourceHand.wool << endl;
          cout << "Brick:\t" << GameProfile.turnplayerList[i].ResourceHand.brick << endl;
   }
+    Turn(GameProfile,false);
+}
 
 
-    cout << "Game commencing. ";
+
+
+
+
+void Turn(Catan GameProfile, bool fromLoad){
+
+    cout << "Game commencing. \n";
     bool inGame = true;
     string input;
     cout.flush();
-    int roll1=GameProfile.diceRoll(GameProfile.turnplayerList[0]);
-    int roll2=GameProfile.diceRoll(GameProfile.turnplayerList[0]);
-    GameProfile.yield(roll1+roll2);
-    cout << "total roll was a " << roll1+roll2 << endl;
 
+    if(fromLoad==false){
+        int roll1=GameProfile.diceRoll(GameProfile.turnplayerList[0]);
+        int roll2=GameProfile.diceRoll(GameProfile.turnplayerList[0]);
+        GameProfile.yield(roll1+roll2);
+        cout << "total roll was a " << roll1+roll2 << endl;
+    }
 
     while(inGame){
         cout.flush();
@@ -328,7 +340,7 @@ void GameState(Catan GameProfile){
         cout << "\nCurrent Player Turn is: " << GameProfile.turnplayerList[GameProfile.currentPlayer].getName() <<" ("<<GameProfile.currentPlayer<<")"<< endl;
         cout << "\nChoose from the following list of moves:";
 
-        cout<< "\n\nSeeBoard\tTrade\t\tBuild\t\tPlayDev\nBuyDev\t\tPrintHand\tEndTurn\t\tQuitGame\n   ";
+        cout<< "\n\nTrade\t\tBuild\t\tPlayDev\t\tBuyDev\t\tBuildingCosts\tSeeDevHand\nSaveGame\tEndTurn\t\tQuitGame\n   ";
         cin>>input;
         bool invalid;
         do{
@@ -341,11 +353,20 @@ void GameState(Catan GameProfile){
                 cout << "total roll was a " << roll1+roll2 << endl;
             }
             else if (input.compare("Trade") == 0){
-                GameProfile.trade();
-            }
-            else if (input.compare("SeeBoard")==0){
-                printBoard(GameProfile);
-            }
+                            string choice;
+                            cout << "Would you like to trade with a Port or another player? (enter Port Player or Back)\n\t";
+                            cin >> choice;
+                            while (!(choice.compare("Port")==0)&&!(choice.compare("Player")==0)&&!(choice.compare("Back")==0)){
+                                cout << "invalid selection, please re-enter.\n\t";
+                                cin >> choice;
+                            }
+                            if (choice.compare("Port")==0)
+                                GameProfile.portTrade();
+                            else if (choice.compare("Player")==0)
+                                GameProfile.trade();
+                            else if (choice.compare("Back")==0)
+                                continue;
+                        }
             else if (input.compare("Build") == 0){
                 cout << "What would you like to build?\n\tSettlement\n\tRoad\n\tCity\n\tBack\n\t";
                 string toBuild;
@@ -354,13 +375,22 @@ void GameState(Catan GameProfile){
                 do{
                     invalidBuild=false;
                     if (toBuild.compare("Settlement")==0){
-                        GameProfile.buildSettle();
+                        if(GameProfile.sufficientRec("Settlement"))
+                            GameProfile.buildSettle();
+                        else
+                            cout << "you don't have enough recourses dipshit!\n\n";
                     }
                     else if (toBuild.compare("Road")==0){
-                        GameProfile.buildRoad();
+                        if(GameProfile.sufficientRec("Road"))
+                            GameProfile.buildRoad();
+                        else
+                            cout << "you don't have enough recourses dipshit!\n\n";
                     }
                     else if (toBuild.compare("City")==0){
-                        GameProfile.upCity();
+                        if(GameProfile.sufficientRec("City"))
+                            GameProfile.upCity();
+                        else
+                            cout << "you don't have enough recourses dipshit!\n\n";
                     }
                     else if (toBuild.compare("Back")==0){
                         continue;
@@ -376,15 +406,13 @@ void GameState(Catan GameProfile){
             else if (input.compare("PlayDev") == 0){
              cout<<"oopsie! can't do that yet\n\n";
             }
-            else if (input.compare("Buy") == 0 )
-                ;
-            else if (input.compare("PrintHand")==0){
-                cout << "\nPlayer " << GameProfile.currentPlayer << " has:\n";
-                cout << "Stone:\t" << GameProfile.turnplayerList[GameProfile.currentPlayer].ResourceHand.stone << endl;
-                cout << "Grain:\t" << GameProfile.turnplayerList[GameProfile.currentPlayer].ResourceHand.grain << endl;
-                cout << "Lumber:\t" << GameProfile.turnplayerList[GameProfile.currentPlayer].ResourceHand.lumber << endl;
-                cout << "Wool:\t" << GameProfile.turnplayerList[GameProfile.currentPlayer].ResourceHand.wool << endl;
-                cout << "Brick:\t" << GameProfile.turnplayerList[GameProfile.currentPlayer].ResourceHand.brick << endl;
+            else if (input.compare("BuyDev") == 0 ){
+                if(GameProfile.sufficientRec("BuyDev")){
+                    cout << "you have sufficient funds!\n";
+                    GameProfile.drawfromDevDeck();
+                }
+                else
+                    cout << "you don't have enough recourses dipshit!\n\n";
             }
             else if (input.compare("QuitGame")==0){
                 cout << "Are you sure you want to leave the game? (yes or no)";
@@ -395,14 +423,36 @@ void GameState(Catan GameProfile){
                     inNewGame= false;
                 }
             }
+            else if (input.compare("BuildingCosts")==0){
+                cout<< "\n\n";
+                cout<< "    A Road costs 1 LUMBER and 1 BRICK\n";
+                cout<< "    A Settlement costs 1 LUMBER, 1 BRICK, 1 GRAIN, and 1 WOOL\n";
+                cout<< "    A City costs 2 GRAIN and 3 STONE\n";
+                cout<< "    A Development Card costs 1 GRAIN, 1 STONE, and 1 WOOL\n";
+                cout<< "\n\n";
+            }
+            else if (input.compare("SaveGame")==0){
+                GameProfile.saveGame();
+            }
+            else if (input.compare("SeeDevHand")==0){    //just for teeesting
+                cout << "\n\n";
+                cout << GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.soldierCard << " Soldier Cards\n";
+                cout << GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.victoryPointCard << " Victory Point Cards\n";
+                cout << GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.monopolyCard << " Monopoly Cards\n";
+                cout << GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.roadBuildingCard << " Road Building Cards\n";
+                cout << GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.yearOfPlentyCard << " Year Of Plenty Cards\n";
+                cout << "\n\n";
+            }
             else{
                 invalid=true;
-                cout << "Invalid entry. Please Re-enter selection.\n";
+                cout << "Invalid entry. Please Re-enter selection.\n   ";
                 cin >> input;
             }
         }while(invalid==true);
     }
 }
+
+
 
 
 
@@ -475,21 +525,22 @@ void printBoard(Catan g){
     cout<<"       \\   /           \\   /           \\   /           \\   /           \\   /"<<endl;
     cout<<"        "<<infO(g,1,28)<<"             "<<infO(g,1,30)<<"             "<<infO(g,1,32)<<"             "<<infO(g,1,34)<<"             "<<infO(g,1,36)<<endl;
     cout<<"         |   "<<infO(g,5,12)<<"   |   "<<infO(g,5,13)<<"   |   "<<infO(g,5,14)<<"   |   "<<infO(g,5,15)<<"   |"<<endl;
-    cout<<"        "<<infO(g,4,49)<<"      "<<infO(g,6,12)<<"     "<<infO(g,4,50)<<"      "<<infO(g,6,13)<<"     "<<infO(g,4,51)<<"      "<<infO(g,6,14)<<"     "<<infO(g,4,52)<<"      "<<infO(g,6,15)<<"     "<<infO(g,4,53)<<endl;
-    cout<<"         |     "<<infO(g,7,12)<<"    |     "<<infO(g,7,13)<<"    |     "<<infO(g,7,14)<<"    |     "<<infO(g,7,15)<<"    |"<<endl;
-    cout<<"        "<<infO(g,1,38)<<"             "<<infO(g,1,40)<<"             "<<infO(g,1,42)<<"             "<<infO(g,1,44)<<"             "<<infO(g,1,46)<<endl;
-    cout<<"           \\           /   \\           /   \\           /   \\           /"<<endl;
-    cout<<"            "<<infO(g,3,54)<<"     "<<infO(g,2,55)<<"     "<<infO(g,3,56)<<"     "<<infO(g,2,57)<<"     "<<infO(g,3,58)<<"     "<<infO(g,2,59)<<"     "<<infO(g,3,60)<<"     "<<infO(g,2,61)<<endl;
-    cout<<"               \\   /           \\   /           \\   /           \\   /"<<endl;
-    cout<<"                "<<infO(g,1,39)<<"             "<<infO(g,1,41)<<"             "<<infO(g,1,43)<<"             "<<infO(g,1,45)<<endl;
-    cout<<"                 |   "<<infO(g,5,16)<<"   |   "<<infO(g,5,17)<<"   |   "<<infO(g,5,18)<<"   |"<<endl;
-    cout<<"                "<<infO(g,4,62)<<"      "<<infO(g,6,16)<<"     "<<infO(g,4,63)<<"      "<<infO(g,6,17)<<"     "<<infO(g,4,64)<<"      "<<infO(g,6,18)<<"     "<<infO(g,4,65)<<endl;
-    cout<<"                 |     "<<infO(g,7,16)<<"    |     "<<infO(g,7,17)<<"    |     "<<infO(g,7,18)<<"    |"<<endl;
-    cout<<"                "<<infO(g,1,47)<<"             "<<infO(g,1,49)<<"             "<<infO(g,1,51)<<"             "<<infO(g,1,53)<<endl;
-    cout<<"                   \\           /   \\           /   \\           /"<<endl;
-    cout<<"                    "<<infO(g,3,66)<<"     "<<infO(g,2,67)<<"     "<<infO(g,3,68)<<"     "<<infO(g,2,69)<<"     "<<infO(g,3,70)<<"     "<<infO(g,2,71)<<endl;
-    cout<<"                       \\   /           \\   /           \\   /"<<endl;
-    cout<<"                        "<<infO(g,1,48)<<"             "<<infO(g,1,50)<<"             "<<infO(g,1,52)<<endl;
+    cout<<"        "<<infO(g,4,49)<<"      "<<infO(g,6,12)<<"     "<<infO(g,4,50)<<"      "<<infO(g,6,13)<<"     "<<infO(g,4,51)<<"      "<<infO(g,6,14)<<"     "<<infO(g,4,52)<<"      "<<infO(g,6,15)<<"     "<<infO(g,4,53)<<"    ________________"<<endl;
+    cout<<"         |     "<<infO(g,7,12)<<"    |     "<<infO(g,7,13)<<"    |     "<<infO(g,7,14)<<"    |     "<<infO(g,7,15)<<"    |    | Player:        |"<<endl;
+    cout<<"        "<<infO(g,1,38)<<"             "<<infO(g,1,40)<<"             "<<infO(g,1,42)<<"             "<<infO(g,1,44)<<"             "<<infO(g,1,46)<<"   |----------------|"<<endl;
+    cout<<"           \\           /   \\           /   \\           /   \\           /      |   "<<infO(g,8,0)<<"|"<<endl;
+    cout<<"            "<<infO(g,3,54)<<"     "<<infO(g,2,55)<<"     "<<infO(g,3,56)<<"     "<<infO(g,2,57)<<"     "<<infO(g,3,58)<<"     "<<infO(g,2,59)<<"     "<<infO(g,3,60)<<"     "<<infO(g,2,61)<<"       |   ("<<g.currentPlayer<<")          |"<<endl;
+    cout<<"               \\   /           \\   /           \\   /           \\   /          |________________|"<<endl;
+    cout<<"                "<<infO(g,1,39)<<"             "<<infO(g,1,41)<<"             "<<infO(g,1,43)<<"             "<<infO(g,1,45)<<"           | Resources:     | "<<endl;
+    cout<<"                 |   "<<infO(g,5,16)<<"   |   "<<infO(g,5,17)<<"   |   "<<infO(g,5,18)<<"   |            |----------------|"<<endl;
+    cout<<"                "<<infO(g,4,62)<<"      "<<infO(g,6,16)<<"     "<<infO(g,4,63)<<"      "<<infO(g,6,17)<<"     "<<infO(g,4,64)<<"      "<<infO(g,6,18)<<"     "<<infO(g,4,65)<<"           |   Stone:  "<<infO(g,9,0)<<"    |"<<endl;
+    cout<<"                 |     "<<infO(g,7,16)<<"    |     "<<infO(g,7,17)<<"    |     "<<infO(g,7,18)<<"    |            |   Grain:  "<<infO(g,9,1)<<"    |"<<endl;
+    cout<<"                "<<infO(g,1,47)<<"             "<<infO(g,1,49)<<"             "<<infO(g,1,51)<<"             "<<infO(g,1,53)<<"           |   Lumber: "<<infO(g,9,2)<<"    |"<<endl;
+    cout<<"                   \\           /   \\           /   \\           /              |   Wool:   "<<infO(g,9,3)<<"    |"<<endl;
+    cout<<"                    "<<infO(g,3,66)<<"     "<<infO(g,2,67)<<"     "<<infO(g,3,68)<<"     "<<infO(g,2,69)<<"     "<<infO(g,3,70)<<"     "<<infO(g,2,71)<<"               |   Brick:  "<<infO(g,9,4)<<"    |"<<endl;
+    cout<<"                       \\   /           \\   /           \\   /                  |----------------|"<<endl;
+    cout<<"                        "<<infO(g,1,48)<<"             "<<infO(g,1,50)<<"             "<<infO(g,1,52)<<"                   | VictoryPts: "<<infO(g,10,0)<<"  |"<<endl;
+    cout<<"                                                                              |________________|"<<endl;
     cout<<endl;
 }
 
@@ -597,11 +648,44 @@ string infO(Catan GameProfile, int a, int b){
         else if(GameProfile.board.hexLayer[b].hasBandit==false)
             result = "      ";
     }
+
+    else if(a==8){        //Player name instance
+        string datName = GameProfile.turnplayerList[GameProfile.currentPlayer].getName();
+        int nameSize = datName.size();
+
+        if (nameSize<14){
+            int k = 13-nameSize;
+            for(int i=0; i<k; i++){
+                datName.push_back(' ');
+                }
+            }
+
+        else{
+            datName.resize(13);
+            }
+
+    result = datName;
+    }
+
+    else if(a==9){        //Player's recourse value
+        stringstream ss;
+        if(b==0)
+            ss << GameProfile.turnplayerList[GameProfile.currentPlayer].ResourceHand.stone;
+        if(b==1)
+            ss << GameProfile.turnplayerList[GameProfile.currentPlayer].ResourceHand.grain;
+        if(b==2)
+            ss << GameProfile.turnplayerList[GameProfile.currentPlayer].ResourceHand.lumber;
+        if(b==3)
+            ss << GameProfile.turnplayerList[GameProfile.currentPlayer].ResourceHand.wool;
+        if(b==4)
+            ss << GameProfile.turnplayerList[GameProfile.currentPlayer].ResourceHand.brick;
+        result = ss.str();
+    }
+
+    else if(a==10){       //Player's victory point value ********FAKE************
+        stringstream ss;
+        ss << GameProfile.turnplayerList[GameProfile.currentPlayer].victoryPoints;
+        result = ss.str();
+    }
     return result;
-}
-
-
-
-void printHand(Catan g){
-
 }

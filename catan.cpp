@@ -6,15 +6,30 @@
 #include <map>
 #include <vector>
 #include <sys/time.h>
+#include <fstream>
+#include <sstream>
 #include "player.h"
 #include "timeFunc.h"
 using namespace std;
 
 
+Catan::Catan(bool fromNewGame){
 
+    if (!fromNewGame){
+       Gameboard newboard(false);
+       board = newboard;
+   }
+    cout<<"dickslang\n";
+    loadGame();
+}
 
-Catan::Catan(int numPlayersIn, vector<string> namesIn) {
+Catan::Catan(int numPlayersIn, vector<string> namesIn, bool fromNewGame) {
+    if(fromNewGame){
+        Gameboard newboard(true);
+        board = newboard;
+    }
     numPlayers = numPlayersIn;
+
     for (int i=0;i<(int)namesIn.size();i++)
     {
         Player player(namesIn[i]);
@@ -25,22 +40,841 @@ Catan::Catan(int numPlayersIn, vector<string> namesIn) {
         (*it).PieceHand.cityPiece = 4;
         (*it).PieceHand.settlementPiece = 5;
         (*it).PieceHand.roadPiece = 13;
-        (*it).DevHand.knightCard = 0;
+        (*it).DevHand.soldierCard = 0;
         (*it).DevHand.monopolyCard = 0;
         (*it).DevHand.roadBuildingCard = 0;
         (*it).DevHand.yearOfPlentyCard = 0;
-        (*it).DevHand.progressCard = 0;
         (*it).DevHand.victoryPointCard = 0;
+        (*it).DevPlayed.soldierCard = 0;
+        (*it).DevPlayed.monopolyCard = 0;
+        (*it).DevPlayed.roadBuildingCard = 0;
+        (*it).DevPlayed.yearOfPlentyCard = 0;
+        (*it).DevPlayed.victoryPointCard = 0;
         (*it).ResourceHand.stone=0;
         (*it).ResourceHand.grain=0;
         (*it).ResourceHand.lumber=0;
         (*it).ResourceHand.wool=0;
         (*it).ResourceHand.brick=0;
-        //NOTE: gameboard is implicity initialized here
+
+    }
+
+    //DevDeck
+    DevDeck.soldierCard = 14;
+    DevDeck.victoryPointCard = 5;
+    DevDeck.monopolyCard = 1;
+    DevDeck.roadBuildingCard = 1;
+    DevDeck.yearOfPlentyCard = 1;
+    DevDeck.size = 22;
+
+}
+
+void Catan::saveGame(){
+    ofstream myfile;
+    myfile.open ("save.dat");
+
+    //print numPlayers
+    myfile << numPlayers;
+    myfile << "\n";
+
+    //print player names
+    for (vector<Player>::iterator k =turnplayerList.begin(); k!=turnplayerList.end(); k++){
+        myfile << (*k).getName() << " ";
+        }
+    myfile << "\n";
+
+    //print number of current player
+    myfile << currentPlayer;
+    myfile << "\n";
+
+    //print number of cards in DevDeck
+    myfile << DevDeck.soldierCard << " ";
+    myfile << DevDeck.victoryPointCard << " ";
+    myfile << DevDeck.monopolyCard << " ";
+    myfile << DevDeck.roadBuildingCard << " ";
+    myfile << DevDeck.yearOfPlentyCard << " ";
+    myfile << DevDeck.size << " ";
+    myfile << "\n";
+
+    //printing out gameboard information
+
+    //hexlayer info
+    for (int i=0; i<19; i++){
+        myfile << board.hexLayer[i].terrType << " ";
+        if (board.hexLayer[i].hasBandit==false)
+            myfile <<"0 ";
+        else
+            myfile<<"1 ";
+        myfile << board.hexLayer[i].yieldNum;
+        myfile << "\n";
+    }
+
+    //vertlayer info
+    for (int i=0; i<54; i++){
+        myfile << board.vertLayer[i].occupiedBy << " ";
+        myfile << board.vertLayer[i].occByType;
+        myfile << "\n";
+    }
+
+    //edgelayer info
+    for (int i=0; i<72; i++){
+        myfile << board.edgeLayer[i].occupiedBy;
+        myfile << "\n";
+    }
+
+    //yieldNums info
+    myfile << board.yieldNums[0].num << " ";
+    myfile << board.yieldNums[0].hex1;
+    myfile << "\n";
+    for(int i=1; i<9; i++){
+        myfile << board.yieldNums[i].num<< " ";
+        myfile << board.yieldNums[i].hex1<< " ";
+        myfile << board.yieldNums[i].hex2<< " ";
+        myfile << "\n";
+    }
+    myfile << board.yieldNums[9].num << " ";
+    myfile << board.yieldNums[9].hex1;
+    myfile << "\n";
+
+    //ports info
+    for (int i=0; i<9; i++){
+        myfile << board.ports[i].loc1 << " ";
+        myfile << board.ports[i].loc2 << " ";
+        myfile << board.ports[i].type << " ";
+        myfile << board.ports[i].player << " ";
+        myfile <<"\n";
+    }
+
+    //Player info
+    for (vector<Player>::iterator k =turnplayerList.begin(); k!=turnplayerList.end(); k++){
+        //print player's resources
+        myfile << (*k).ResourceHand.stone << " ";
+        myfile << (*k).ResourceHand.grain << " ";
+        myfile << (*k).ResourceHand.lumber << " ";
+        myfile << (*k).ResourceHand.wool << " ";
+        myfile << (*k).ResourceHand.brick << " ";
+        myfile << "\n";
+
+        //print player's victory points
+        myfile << (*k).victoryPoints << "\n";
+
+        //print player's dev cards played
+        myfile << (*k).DevPlayed.soldierCard << " ";
+        myfile << (*k).DevPlayed.monopolyCard << " ";
+        myfile << (*k).DevPlayed.roadBuildingCard << " ";
+        myfile << (*k).DevPlayed.yearOfPlentyCard << " ";
+        myfile << (*k).DevPlayed.victoryPointCard << " ";
+        myfile << "\n";
+
+        //print player's dev cards in hand
+        myfile << (*k).DevHand.soldierCard << " ";
+        myfile << (*k).DevHand.monopolyCard << " ";
+        myfile << (*k).DevHand.roadBuildingCard << " ";
+        myfile << (*k).DevHand.yearOfPlentyCard << " ";
+        myfile << (*k).DevHand.victoryPointCard << " ";
+        myfile << "\n";
+
+        //print player's pieceHand
+        myfile << (*k).PieceHand.cityPiece << " ";
+        myfile << (*k).PieceHand.settlementPiece << " ";
+        myfile << (*k).PieceHand.roadPiece << " ";
+        myfile << "\n";
+
+        //print player's honors (longest whatever)
+        if ((*k).hasLongestRoad==false)
+            myfile <<"0 ";
+        else
+            myfile<<"1 ";
+
+        if ((*k).hasLargestArmy==true)
+            myfile <<"0";
+        else
+            myfile<<"1";
+
+        myfile << "\n";
+
+        //print player's turnNum
+        myfile << (*k).getTurn();
+        myfile << "\n";
+    }
+
+    myfile.close();
+    return;
+}
+
+void Catan::loadGame(){
+    ifstream infile;
+    infile.open("save.dat");
+    if(!infile.good()){
+        infile.close();
+        return;
+    }
+    string str, word;
+    int val;
+    bool boolean;
+
+    int counter=1;
+    int dickslang=0;
+
+    while(infile.good() && getline(infile,str)){
+        stringstream ss(str);
+
+        //read and assign numPlayers
+        if(counter==1){
+            while(ss.good()){
+               ss >> val;
+               numPlayers = val;
+           }
+        }
+
+        //read and create turnplayerList with player names
+        else if(counter==2){
+            int i = numPlayers;
+            while(i!=0){
+                ss >> word;
+                Player player(word);
+                turnplayerList.push_back(player);
+                i--;
+            }
+        }
+
+        //read and assign currentPlayer integer
+        else if(counter==3){
+            while(ss.good()){
+                ss >> val;
+                currentPlayer = val;
+            }
+        }
+
+        //read and initialize DevDeck in Catan class
+        else if(counter==4){
+            while(ss.good()){
+                ss >> val;
+                if (dickslang==0)
+                    DevDeck.soldierCard = val;
+                else if (dickslang==1)
+                    DevDeck.victoryPointCard = val;
+                else if (dickslang==2)
+                    DevDeck.monopolyCard = val;
+                else if (dickslang==3)
+                    DevDeck.roadBuildingCard = val;
+                else if (dickslang==4)
+                    DevDeck.yearOfPlentyCard =  val;
+                else if (dickslang==5)
+                    DevDeck.size = val;
+                dickslang++;
+            }
+            dickslang=0;
+        }
+
+        //read and initialize the hexLayer
+        else if((counter>=5)&&(counter<=23)){
+            while(ss.good()){
+                if(dickslang==0){
+                    ss >> val;
+                    if(val==0)
+                        board.hexLayer[(counter-5)].terrType = HILLS;
+                    else if(val==1)
+                        board.hexLayer[(counter-5)].terrType = FIELD;
+                    else if(val==2)
+                        board.hexLayer[(counter-5)].terrType = FOREST;
+                    else if(val==3)
+                        board.hexLayer[(counter-5)].terrType = MOUNTAINS;
+                    else if(val==4)
+                        board.hexLayer[(counter-5)].terrType = PASTURE;
+                    else if(val==5)
+                        board.hexLayer[(counter-5)].terrType = DESERT;
+                }
+                else if(dickslang==1){
+                    ss >> boolean;
+                    board.hexLayer[(counter-5)].hasBandit = boolean;
+                }
+                else if(dickslang==2){
+                    ss >> val;
+                    board.hexLayer[(counter-5)].yieldNum = val;
+                }
+                dickslang++;
+            }
+            dickslang=0;
+        }
+
+        //read and initialize the vertLayer
+        else if((counter>=24) && (counter<=77)){
+            while(ss.good()) {
+                if (dickslang==0) {
+                    ss >> val;
+                    if (val==0)
+                        board.vertLayer[counter-24].occupiedBy = PLAYER0;
+                    else if (val==1)
+                        board.vertLayer[counter-24].occupiedBy = PLAYER1;
+                    else if (val==2)
+                        board.vertLayer[counter-24].occupiedBy = PLAYER2;
+                    else if (val==3)
+                        board.vertLayer[counter-24].occupiedBy = PLAYER3;
+                    else if (val==4)
+                        board.vertLayer[counter-24].occupiedBy = NOONE;
+
+                }
+                else if (dickslang==1){
+                    ss >> val;
+                    board.vertLayer[counter-24].occByType = val;
+                }
+                dickslang++;
+            }
+            dickslang = 0;
+        }
+
+
+        // read and initialize edgeLayer
+        else if ((counter>=78) && (counter <= 149)) {
+            while(ss.good()) {
+                ss >> val;
+                if (val==0)
+                    board.edgeLayer[counter-78].occupiedBy = PLAYER0;
+                else if (val==1)
+                    board.edgeLayer[counter-78].occupiedBy = PLAYER1;
+                else if (val==2)
+                    board.edgeLayer[counter-78].occupiedBy = PLAYER2;
+                else if (val==3)
+                    board.edgeLayer[counter-78].occupiedBy = PLAYER3;
+                else if (val==4)
+                    board.edgeLayer[counter-78].occupiedBy = NOONE;
+            }
+        }
+
+        //read and initialize yieldNums vector
+        else if(counter==150){
+            while(ss.good()){
+                ss >> val;
+                if (dickslang==0){
+                    board.yieldNums[0].num = val;
+                }
+                else if (dickslang==1){
+                    board.yieldNums[0].hex1 = val;
+                }
+
+                dickslang++;
+            }
+            dickslang=0;
+        }
+
+        else if( (counter>=151) && (counter<=158) ){
+            while(ss.good()){
+                ss >> val;
+                if (dickslang==0)
+                    board.yieldNums[(counter-150)].num = val;
+                else if (dickslang==1)
+                    board.yieldNums[(counter-150)].hex1 = val;
+                else if (dickslang==1)
+                    board.yieldNums[(counter-150)].hex1 = val;
+
+                dickslang++;
+            }
+            dickslang=0;
+        }
+        else if(counter==159){
+            while(ss.good()){
+                ss >> val;
+                if (dickslang==0)
+                    board.yieldNums[9].num = val;
+                else if (dickslang==1)
+                    board.yieldNums[9].hex1 = val;
+
+                dickslang++;
+            }
+            dickslang=0;
+        }
+
+        //read and initialize the ports
+        else if ((counter>=160) && (counter<=168)){
+            while(ss.good()){
+                ss >> val;
+                if (dickslang==0)
+                    board.ports[(counter-160)].loc1 = val;
+                else if (dickslang==1)
+                    board.ports[(counter-160)].loc2 = val;
+                else if (dickslang==2)
+                    board.ports[(counter-160)].type = val;
+                else if (dickslang==3){
+                    if (val==0)
+                        board.ports[(counter-160)].player = PLAYER0;
+                    else if (val==1)
+                        board.ports[(counter-160)].player = PLAYER1;
+                    else if (val==2)
+                        board.ports[(counter-160)].player = PLAYER2;
+                    else if (val==3)
+                        board.ports[(counter-160)].player = PLAYER3;
+                    else if (val==4)
+                        board.ports[(counter-160)].player = NOONE;
+                    }
+
+                dickslang++;
+            }
+            dickslang=0;
+        }
+        //PLAYER0-2's information FIXXXXXXXXXXX THISSSSSSSSSSSSSSSSSSSSSSSSSs
+        else if((counter>=169) && (counter <= 189)){
+                //PLAYER0's ResourceHand
+                if(counter==(169)){
+                    while(ss.good()){
+                        ss >> val;
+                        if(dickslang==0)
+                            turnplayerList[0].ResourceHand.stone = val;
+                        else if(dickslang==1)
+                            turnplayerList[0].ResourceHand.grain = val;
+                        else if(dickslang==2)
+                            turnplayerList[0].ResourceHand.lumber = val;
+                        else if(dickslang==3)
+                            turnplayerList[0].ResourceHand.wool = val;
+                        else if(dickslang==4)
+                            turnplayerList[0].ResourceHand.brick = val;
+
+                        dickslang++;
+                    }
+                    dickslang=0;
+                }
+                //PLAYER0's VictoryPoints
+                else if(counter==170){
+                    while(ss.good()){
+                        ss >> val;
+                        turnplayerList[0].victoryPoints = val;
+                    }
+                }
+                //PLAYER0's DevPlayed
+                else if(counter==171){
+                    while(ss.good()){
+                        ss >> val;
+                        if(dickslang==0)
+                            turnplayerList[0].DevPlayed.soldierCard = val;
+                        else if(dickslang==1)
+                            turnplayerList[0].DevPlayed.victoryPointCard = val;
+                        else if(dickslang==2)
+                            turnplayerList[0].DevPlayed.monopolyCard = val;
+                        else if(dickslang==3)
+                            turnplayerList[0].DevPlayed.roadBuildingCard = val;
+                        else if(dickslang==4)
+                            turnplayerList[0].DevPlayed.yearOfPlentyCard = val;
+                        else if(dickslang==5)
+                            turnplayerList[0].DevPlayed.size = val;
+
+                        dickslang ++;
+                    }
+                    dickslang = 0;
+                }
+                //PLAYER0's DevHand
+                else if(counter==172){
+                    while(ss.good()){
+                        ss >> val;
+                        if(dickslang==0)
+                            turnplayerList[0].DevHand.soldierCard = val;
+                        else if(dickslang==1)
+                            turnplayerList[0].DevHand.victoryPointCard = val;
+                        else if(dickslang==2)
+                            turnplayerList[0].DevHand.monopolyCard = val;
+                        else if(dickslang==3)
+                            turnplayerList[0].DevHand.roadBuildingCard = val;
+                        else if(dickslang==4)
+                            turnplayerList[0].DevHand.yearOfPlentyCard = val;
+                        else if(dickslang==5)
+                            turnplayerList[0].DevHand.size = val;
+
+                        dickslang ++;
+                    }
+                    dickslang = 0;
+                }
+                //PLAYER0's PieceHand
+                else if(counter==173){
+                    while(ss.good()){
+                        ss >> val;
+                        if(dickslang==0)
+                            turnplayerList[0].PieceHand.cityPiece = val;
+                        else if(dickslang==1)
+                            turnplayerList[0].PieceHand.settlementPiece = val;
+                        else if(dickslang==2)
+                            turnplayerList[0].PieceHand.roadPiece = val;
+
+                        dickslang++;
+                    }
+                    dickslang=0;
+                }
+                //PLAYER0's Honors
+                else if(counter==174){
+                    while(ss.good()){
+                        ss >> boolean;
+                        if(dickslang==0)
+                            turnplayerList[0].hasLongestRoad = boolean;
+                        if(dickslang==1)
+                            turnplayerList[0].hasLargestArmy = boolean;
+
+                        dickslang++;
+                    }
+                    dickslang=0;
+                }
+
+                //PLAYER0's Playerturn
+                else if(counter==175){
+                    while(ss.good()){
+                        ss >> val;
+                        if (val==0)
+                            turnplayerList[0].setTurn(PLAYER0);
+                        if (val==1)
+                            turnplayerList[0].setTurn(PLAYER1);
+                        if (val==2)
+                            turnplayerList[0].setTurn(PLAYER2);
+                        if (val==3)
+                            turnplayerList[0].setTurn(PLAYER3);
+                    }
+                }
+
+
+
+
+                //PLAYER1's ResourceHand
+                if(counter==(176)){
+                    while(ss.good()){
+                        ss >> val;
+                        if(dickslang==0)
+                            turnplayerList[1].ResourceHand.stone = val;
+                        else if(dickslang==1)
+                            turnplayerList[1].ResourceHand.grain = val;
+                        else if(dickslang==2)
+                            turnplayerList[1].ResourceHand.lumber = val;
+                        else if(dickslang==3)
+                            turnplayerList[1].ResourceHand.wool = val;
+                        else if(dickslang==4)
+                            turnplayerList[1].ResourceHand.brick = val;
+
+                        dickslang++;
+                    }
+                    dickslang=0;
+                }
+                //PLAYER1's VictoryPoints
+                else if(counter==177){
+                    while(ss.good()){
+                        ss >> val;
+                        turnplayerList[1].victoryPoints = val;
+                    }
+                }
+                //PLAYER1's DevPlayed
+                else if(counter==178){
+                    while(ss.good()){
+                        ss >> val;
+                        if(dickslang==0)
+                            turnplayerList[1].DevPlayed.soldierCard = val;
+                        else if(dickslang==1)
+                            turnplayerList[1].DevPlayed.victoryPointCard = val;
+                        else if(dickslang==2)
+                            turnplayerList[1].DevPlayed.monopolyCard = val;
+                        else if(dickslang==3)
+                            turnplayerList[1].DevPlayed.roadBuildingCard = val;
+                        else if(dickslang==4)
+                            turnplayerList[1].DevPlayed.yearOfPlentyCard = val;
+                        else if(dickslang==5)
+                            turnplayerList[1].DevPlayed.size = val;
+
+                        dickslang ++;
+                    }
+                    dickslang = 0;
+                }
+                //PLAYER1's DevHand
+                else if(counter==179){
+                    while(ss.good()){
+                        ss >> val;
+                        if(dickslang==0)
+                            turnplayerList[1].DevHand.soldierCard = val;
+                        else if(dickslang==1)
+                            turnplayerList[1].DevHand.victoryPointCard = val;
+                        else if(dickslang==2)
+                            turnplayerList[1].DevHand.monopolyCard = val;
+                        else if(dickslang==3)
+                            turnplayerList[1].DevHand.roadBuildingCard = val;
+                        else if(dickslang==4)
+                            turnplayerList[1].DevHand.yearOfPlentyCard = val;
+                        else if(dickslang==5)
+                            turnplayerList[1].DevHand.size = val;
+
+                        dickslang ++;
+                    }
+                    dickslang = 0;
+                }
+                //PLAYER1's PieceHand
+                else if(counter==180){
+                    while(ss.good()){
+                        ss >> val;
+                        if(dickslang==0)
+                            turnplayerList[1].PieceHand.cityPiece = val;
+                        else if(dickslang==1)
+                            turnplayerList[1].PieceHand.settlementPiece = val;
+                        else if(dickslang==2)
+                            turnplayerList[1].PieceHand.roadPiece = val;
+
+                        dickslang++;
+                    }
+                    dickslang=0;
+                }
+                //PLAYER1's Honors
+                else if(counter==181){
+                    while(ss.good()){
+                        ss >> boolean;
+                        if(dickslang==0)
+                            turnplayerList[1].hasLongestRoad = boolean;
+                        if(dickslang==1)
+                            turnplayerList[1].hasLargestArmy = boolean;
+
+                        dickslang++;
+                    }
+                    dickslang=0;
+                }
+
+                //PLAYER1's Playerturn
+                else if(counter==182){
+                    while(ss.good()){
+                        ss >> val;
+                        if (val==0)
+                            turnplayerList[1].setTurn(PLAYER0);
+                        if (val==1)
+                            turnplayerList[1].setTurn(PLAYER1);
+                        if (val==2)
+                            turnplayerList[1].setTurn(PLAYER2);
+                        if (val==3)
+                            turnplayerList[1].setTurn(PLAYER3);
+                    }
+                }
+
+
+                //PLAYER2's ResourceHand
+                if(counter==(183)){
+                    while(ss.good()){
+                        ss >> val;
+                        if(dickslang==0)
+                            turnplayerList[2].ResourceHand.stone = val;
+                        else if(dickslang==1)
+                            turnplayerList[2].ResourceHand.grain = val;
+                        else if(dickslang==2)
+                            turnplayerList[2].ResourceHand.lumber = val;
+                        else if(dickslang==3)
+                            turnplayerList[2].ResourceHand.wool = val;
+                        else if(dickslang==4)
+                            turnplayerList[2].ResourceHand.brick = val;
+
+                        dickslang++;
+                    }
+                    dickslang=0;
+                }
+                //PLAYER2's VictoryPoints
+                else if(counter==184){
+                    while(ss.good()){
+                        ss >> val;
+                        turnplayerList[2].victoryPoints = val;
+                    }
+                }
+                //PLAYER2's DevPlayed
+                else if(counter==185){
+                    while(ss.good()){
+                        ss >> val;
+                        if(dickslang==0)
+                            turnplayerList[2].DevPlayed.soldierCard = val;
+                        else if(dickslang==1)
+                            turnplayerList[2].DevPlayed.victoryPointCard = val;
+                        else if(dickslang==2)
+                            turnplayerList[2].DevPlayed.monopolyCard = val;
+                        else if(dickslang==3)
+                            turnplayerList[2].DevPlayed.roadBuildingCard = val;
+                        else if(dickslang==4)
+                            turnplayerList[2].DevPlayed.yearOfPlentyCard = val;
+                        else if(dickslang==5)
+                            turnplayerList[2].DevPlayed.size = val;
+
+                        dickslang ++;
+                    }
+                    dickslang = 0;
+                }
+                //PLAYER2's DevHand
+                else if(counter==186){
+                    while(ss.good()){
+                        ss >> val;
+                        if(dickslang==0)
+                            turnplayerList[2].DevHand.soldierCard = val;
+                        else if(dickslang==1)
+                            turnplayerList[2].DevHand.victoryPointCard = val;
+                        else if(dickslang==2)
+                            turnplayerList[2].DevHand.monopolyCard = val;
+                        else if(dickslang==3)
+                            turnplayerList[2].DevHand.roadBuildingCard = val;
+                        else if(dickslang==4)
+                            turnplayerList[2].DevHand.yearOfPlentyCard = val;
+                        else if(dickslang==5)
+                            turnplayerList[2].DevHand.size = val;
+
+                        dickslang ++;
+                    }
+                    dickslang = 0;
+                }
+                //PLAYER2's PieceHand
+                else if(counter==187){
+                    while(ss.good()){
+                        ss >> val;
+                        if(dickslang==0)
+                            turnplayerList[2].PieceHand.cityPiece = val;
+                        else if(dickslang==1)
+                            turnplayerList[2].PieceHand.settlementPiece = val;
+                        else if(dickslang==2)
+                            turnplayerList[2].PieceHand.roadPiece = val;
+
+                        dickslang++;
+                    }
+                    dickslang=0;
+                }
+                //PLAYER2's Honors
+                else if(counter==188){
+                    while(ss.good()){
+                        ss >> boolean;
+                        if(dickslang==0)
+                            turnplayerList[2].hasLongestRoad = boolean;
+                        if(dickslang==1)
+                            turnplayerList[2].hasLargestArmy = boolean;
+
+                        dickslang++;
+                    }
+                    dickslang=0;
+                }
+
+                //PLAYER2's Playerturn
+                else if(counter==189){
+                    while(ss.good()){
+                        ss >> val;
+                        if (val==0)
+                            turnplayerList[2].setTurn(PLAYER0);
+                        if (val==1)
+                            turnplayerList[2].setTurn(PLAYER1);
+                        if (val==2)
+                            turnplayerList[2].setTurn(PLAYER2);
+                        if (val==3)
+                            turnplayerList[2].setTurn(PLAYER3);
+                    }
+                }
+            }
+
+
+
+
+        if(numPlayers==4){
+            //PLAYER3's ResourceHand
+            if(counter==(190)){
+                while(ss.good()){
+                    ss >> val;
+                    if(dickslang==0)
+                        turnplayerList[3].ResourceHand.stone = val;
+                    else if(dickslang==1)
+                        turnplayerList[3].ResourceHand.grain = val;
+                    else if(dickslang==2)
+                        turnplayerList[3].ResourceHand.lumber = val;
+                    else if(dickslang==3)
+                        turnplayerList[3].ResourceHand.wool = val;
+                    else if(dickslang==4)
+                        turnplayerList[3].ResourceHand.brick = val;
+
+                    dickslang++;
+                }
+                dickslang=0;
+            }
+            //PLAYER3's VictoryPoints
+            else if(counter==191){
+                while(ss.good()){
+                    ss >> val;
+                    turnplayerList[3].victoryPoints = val;
+                }
+            }
+            //PLAYER3's DevPlayed
+            else if(counter==192){
+                while(ss.good()){
+                    ss >> val;
+                    if(dickslang==0)
+                        turnplayerList[3].DevPlayed.soldierCard = val;
+                    else if(dickslang==1)
+                        turnplayerList[3].DevPlayed.victoryPointCard = val;
+                    else if(dickslang==2)
+                        turnplayerList[3].DevPlayed.monopolyCard = val;
+                    else if(dickslang==3)
+                        turnplayerList[3].DevPlayed.roadBuildingCard = val;
+                    else if(dickslang==4)
+                        turnplayerList[3].DevPlayed.yearOfPlentyCard = val;
+                    else if(dickslang==5)
+                        turnplayerList[3].DevPlayed.size = val;
+
+                    dickslang ++;
+                }
+                dickslang = 0;
+            }
+            //PLAYER3's DevHand
+            else if(counter==193){
+                while(ss.good()){
+                    ss >> val;
+                    if(dickslang==0)
+                        turnplayerList[3].DevHand.soldierCard = val;
+                    else if(dickslang==1)
+                        turnplayerList[3].DevHand.victoryPointCard = val;
+                    else if(dickslang==2)
+                        turnplayerList[3].DevHand.monopolyCard = val;
+                    else if(dickslang==3)
+                        turnplayerList[3].DevHand.roadBuildingCard = val;
+                    else if(dickslang==4)
+                        turnplayerList[3].DevHand.yearOfPlentyCard = val;
+                    else if(dickslang==5)
+                        turnplayerList[3].DevHand.size = val;
+
+                    dickslang ++;
+                }
+                dickslang = 0;
+            }
+            //PLAYER3's PieceHand
+            else if(counter==194){
+                while(ss.good()){
+                    ss >> val;
+                    if(dickslang==0)
+                        turnplayerList[3].PieceHand.cityPiece = val;
+                    else if(dickslang==1)
+                        turnplayerList[3].PieceHand.settlementPiece = val;
+                    else if(dickslang==2)
+                        turnplayerList[3].PieceHand.roadPiece = val;
+
+                    dickslang++;
+                }
+                dickslang=0;
+            }
+            //PLAYER3's Honors
+            else if(counter==195){
+                while(ss.good()){
+                    ss >> boolean;
+                    if(dickslang==0)
+                        turnplayerList[3].hasLongestRoad = boolean;
+                    if(dickslang==1)
+                        turnplayerList[3].hasLargestArmy = boolean;
+
+                    dickslang++;
+                }
+                dickslang=0;
+            }
+
+            //PLAYER3's Playerturn
+            else if(counter==196){
+                while(ss.good()){
+                    ss >> val;
+                    if (val==0)
+                        turnplayerList[3].setTurn(PLAYER0);
+                    if (val==1)
+                        turnplayerList[3].setTurn(PLAYER1);
+                    if (val==2)
+                        turnplayerList[3].setTurn(PLAYER2);
+                    if (val==3)
+                        turnplayerList[3].setTurn(PLAYER3);
+                }
+            }
+        }
+        counter++;
     }
 }
 
-void Catan::placeSettlement(Player currPlayer, int vertNum){
+void Catan::placeSettlement(Player& currPlayer, int vertNum){
     if (board.validSettle(currPlayer.getTurn(), vertNum)==1){
         cout << "\nvertex is occupied, please choose another location\n";
         cin >> vertNum;
@@ -58,13 +892,49 @@ void Catan::placeSettlement(Player currPlayer, int vertNum){
     }
     else {
         board.setSettle(currPlayer.getTurn(), vertNum);
+        if ((vertNum==0)||(vertNum==1)){
+            board.ports[0].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(0);
+        }
+        else if ((vertNum==3)||(vertNum==4)){
+            board.ports[1].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(1);
+        }
+        else if ((vertNum==14)||(vertNum==15)){
+            board.ports[2].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(2);
+        }
+        else if ((vertNum==26)||(vertNum==37)){
+            board.ports[3].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(3);
+        }
+        else if ((vertNum==46)||(vertNum==45)){
+            board.ports[4].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(4);
+        }
+        else if ((vertNum==51)||(vertNum==50)){
+            board.ports[5].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(5);
+        }
+        else if ((vertNum==48)||(vertNum==47)){
+            board.ports[6].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(6);
+        }
+        else if ((vertNum==38)||(vertNum==28)){
+            board.ports[7].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(7);
+        }
+        else if ((vertNum==17)||(vertNum==7)){
+            board.ports[8].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(8);
+        }
         cout << "settlement placed\n\n";
-
+        (currPlayer.victoryPoints)++;
     }
 return;
 }
 
-void Catan::placeFirstSettlement(Player currPlayer, int &vertNum){
+void Catan::placeFirstSettlement(Player& currPlayer, int &vertNum){
     if (board.validSettle(currPlayer.getTurn(), vertNum)==1){
         cout << "\nvertex is occupied, please choose another location\n";
         cin >> vertNum;
@@ -79,7 +949,44 @@ void Catan::placeFirstSettlement(Player currPlayer, int &vertNum){
     }
     else {
         board.setSettle(currPlayer.getTurn(), vertNum);
+        if ((vertNum==0)||(vertNum==1)){
+            board.ports[0].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(0);
+        }
+        else if ((vertNum==3)||(vertNum==4)){
+            board.ports[1].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(1);
+        }
+        else if ((vertNum==14)||(vertNum==15)){
+            board.ports[2].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(2);
+        }
+        else if ((vertNum==26)||(vertNum==37)){
+            board.ports[3].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(3);
+        }
+        else if ((vertNum==46)||(vertNum==45)){
+            board.ports[4].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(4);
+        }
+        else if ((vertNum==51)||(vertNum==50)){
+            board.ports[5].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(5);
+        }
+        else if ((vertNum==48)||(vertNum==47)){
+            board.ports[6].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(6);
+        }
+        else if ((vertNum==38)||(vertNum==28)){
+            board.ports[7].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(7);
+        }
+        else if ((vertNum==17)||(vertNum==7)){
+            board.ports[8].player=currPlayer.getTurn();
+            currPlayer.portsOwned.push_back(8);
+        }
         cout<<"settlement placed\n\n";
+        (currPlayer.victoryPoints)++;
         return;
     }
 }
@@ -101,6 +1008,7 @@ void Catan::placeRoad(Player currPlayer, int edgeNum){
 
     else {
         board.setRoad(currPlayer.getTurn(), edgeNum);
+        currPlayer.numRoads++;
         cout<<"road placed\n\n";
         return;
     }
@@ -116,6 +1024,7 @@ void Catan::placeCity(Player currPlayer, int vertNum){
     else{
         board.setCity(currPlayer.getTurn(), vertNum);
         cout << "city placed\n";
+        (currPlayer.victoryPoints)++;
     }
 }
 
@@ -139,6 +1048,7 @@ void Catan::trade(){
     resourceType typeOut;
     int numIn;
     while(inTrade==true){
+        inTrade=false;
         cout << turnplayerList[currentPlayer].getName() << ", you have:\n";
         if ((turnplayerList[currentPlayer].ResourceHand.stone)>0){
             cout << "\tStone:\t" << turnplayerList[currentPlayer].ResourceHand.stone << endl;
@@ -172,9 +1082,10 @@ void Catan::trade(){
         string choiceOut;
         int numChoiceOut;
         do{ //checks input for validity
+            invalid=false;
             cout << "in do-while\n";
             if ((recChoice.compare("Stone")==0)){
-                cout << "Choose the amount of Stone you want to give (1-" << turnplayerList[currPlayer].ResourceHand.stone <<
+                cout << "Choose the amount of Stone you want to give (1-" << turnplayerList[currentPlayer].ResourceHand.stone <<
                         "), or enter Back:\n";
                 cin >> choiceOut;
                 //
@@ -183,14 +1094,16 @@ void Catan::trade(){
                 //
                 revalidInputStone:
                 if (isdigit(choiceOut[0])==0){
+                    cout << "seeing if choiceOut is back\n";
                     if (choiceOut.compare("Back")==0){
                         inTrade=false;
-                        cout << "Closing trade negotiations";
+                        cout << "Closing trade negotiations.\n";
                         delay(2);
                         goto endTrade;
                     }
                 }
                 //checking to make sure numchoice is an int, if not re-prompts for entry and re-checks
+                cout << "choice out is not back\n";
                 for (int i=0;i<(int)choiceOut.size();i++){
                     if (isdigit(choiceOut[i])==0){
                         cout << "Invalid selection. Please re-enter amount of Stone you are giving. Or enter 'Back'\n";
@@ -202,7 +1115,7 @@ void Catan::trade(){
             }
             //cout << "Not Stone\n";
             else if ((recChoice.compare("Grain")==0)){
-                cout << "Choose the amount of Grain you want to give (1-" << turnplayerList[currPlayer].ResourceHand.grain <<
+                cout << "Choose the amount of Grain you want to give (1-" << turnplayerList[currentPlayer].ResourceHand.grain <<
                         "), or enter Back:\n";
                 cin >> choiceOut;
                 //
@@ -228,7 +1141,7 @@ void Catan::trade(){
             }
             //cout << "Not Grain\n";
             else if ((recChoice.compare("Lumber")==0)){
-                cout << "Choose the amount of Lumber you want to give (1-" << turnplayerList[currPlayer].ResourceHand.lumber <<
+                cout << "Choose the amount of Lumber you want to give (1-" << turnplayerList[currentPlayer].ResourceHand.lumber <<
                         "), or enter Back:\n";
                 cin >> choiceOut;
                 //
@@ -256,7 +1169,7 @@ void Catan::trade(){
             }
             //cout << "Not Lumber\n";
             else if ((recChoice.compare("Wool")==0)){
-                cout << "Choose the amount of Wool you want to give (1-" << turnplayerList[currPlayer].ResourceHand.wool <<
+                cout << "Choose the amount of Wool you want to give (1-" << turnplayerList[currentPlayer].ResourceHand.wool <<
                         "), or enter Back:\n";
                 cin >> choiceOut;
                 //
@@ -267,7 +1180,7 @@ void Catan::trade(){
                 if (isdigit(choiceOut[0])==0){
                     if (choiceOut.compare("Back")==0){
                         inTrade=false;
-                        cout << "Closing trade negotiations\n";
+                        cout << "Closing trade negotiations.\n";
                         delay(2);
                         goto endTrade;
                     }
@@ -284,7 +1197,7 @@ void Catan::trade(){
             }
             //cout << "Not Wool\n";
             else if ((recChoice.compare("Brick")==0)){
-                cout << "Choose the amount of Brick you want to give (1-" << turnplayerList[currPlayer].ResourceHand.brick <<
+                cout << "Choose the amount of Brick you want to give (1-" << turnplayerList[currentPlayer].ResourceHand.brick <<
                         "), or enter Back:\n";
                 cin >> choiceOut;
                 //
@@ -311,6 +1224,11 @@ void Catan::trade(){
                 numChoiceOut=atoi(choiceOut.c_str());
             }
             //cout << "Not Brick\n";
+            else if (recChoice.compare("Back")==0){
+                cout << "Closing trade negotiations.\n";
+                delay(2);
+                goto endTrade;
+            }
             else{
                 cout << "Invalid selection. Please re-enter type of resource you are giving. Or enter 'Back'\n";
                 cin >> recChoice;
@@ -318,21 +1236,19 @@ void Catan::trade(){
             }
 
         }while(invalid==true);
-
-//        do{
             do{ //again, checking for validity
                 invalid=false;
                 cout << "Please enter the resource you want for your " << recChoice << ". (Stone Grain Lumber Wool or Brick):\n";
                 cin >> recIn;
                 if ((recIn.compare("Stone")==1) && (recIn.compare("Grain")==1) && (recIn.compare("Lumber")==1)
-                    && (recIn.compare("Wool")==1) && (recIn.compare("Brick")==1) && (recIn.compare("Back"))){
+                    && (recIn.compare("Wool")==1) && (recIn.compare("Brick")==1) && (recIn.compare("Back")==1)){
                     cout << "Invalid selection. Please re-enter.\n";
                     cin >> recIn;
                     invalid=true;
                 }
             }while(invalid==true);
-            if (recIn.compare("Back")){
-                cout << "Closing trade negotiations\n";
+            if (recIn.compare("Back")==0){
+                cout << "Closing trade negotiations.\n";
                 delay(2);
                 goto endTrade;
             }
@@ -383,6 +1299,12 @@ void Catan::trade(){
                         goto stillInval;
                     }
                 }
+                if (tradeTo.compare("NOBODY")==0){
+                    cout << "Nobody accepted the trade. Closing negotiations.\n";
+                    delay(2);
+                    goto endTrade;
+                }
+
                 for (int i=0;;i++){
                     if (tradeTo.compare(turnplayerList[i].getName())==0){
                         numTo=i;
@@ -390,15 +1312,15 @@ void Catan::trade(){
                     }
                 }
 
-                if (choiceOut.compare("Stone"))
+                if (recChoice.compare("Stone")==0)
                     typeOut = STONE;
-                if (choiceOut.compare("Lumber"))
+                if (recChoice.compare("Lumber")==0)
                     typeOut = LUMBER;
-                if (choiceOut.compare("Grain"))
+                if (recChoice.compare("Grain")==0)
                     typeOut = GRAIN;
-                if (choiceOut.compare("Wool"))
+                if (recChoice.compare("Wool")==0)
                     typeOut = WOOL;
-                if (choiceOut.compare("Brick"))
+                if (recChoice.compare("Brick")==0)
                     typeOut = BRICK;
 
 
@@ -419,9 +1341,9 @@ void Catan::trade(){
                         turnplayerList[numTo].recIn(typeOut);
                     }
 
-                    cout << "You have successfully traded " << numChoiceOut << " " << choiceOut << " for "
+                    cout << "You have successfully traded " << numChoiceOut << " " << recChoice << " for "
                             << numIn << " " << recIn << ". Congratz.\n";
-                    cout << "Would you like to make another trade? (Yes or No)";
+                    cout << "would you like to make another trade? (Yes or No)\n";
                     string tradeAgain;
                     cin >> tradeAgain;
                     if (tradeAgain.compare("Yes")==0){
@@ -446,9 +1368,9 @@ void Catan::trade(){
                         turnplayerList[numTo].recIn(typeOut);
                     }
 
-                    cout << "You have successfully traded " << numChoiceOut << " " << choiceOut << " for "
+                    cout << "You have successfully traded " << numChoiceOut << " " << recChoice << " for "
                             << numIn << " " << recIn << ". Congratz.\n";
-                    cout << "Would you like to make another trade? (Yes or No)";
+                    cout << "would you like to make another trade? (Yes or No)\n";
                     string tradeAgain;
                     cin >> tradeAgain;
                     if (tradeAgain.compare("Yes")==0){
@@ -473,9 +1395,9 @@ void Catan::trade(){
                         turnplayerList[numTo].recIn(typeOut);
                     }
 
-                    cout << "You have successfully traded " << numChoiceOut << " " << choiceOut << " for "
+                    cout << "You have successfully traded " << numChoiceOut << " " << recChoice << " for "
                             << numIn << " " << recIn << ". Congratz.\n";
-                    cout << "Would you like to make another trade? (Yes or No)";
+                    cout << "would you like to make another trade? (Yes or No)\n";
                     string tradeAgain;
                     cin >> tradeAgain;
                     if (tradeAgain.compare("Yes")==0){
@@ -500,9 +1422,9 @@ void Catan::trade(){
                         turnplayerList[numTo].recIn(typeOut);
                     }
 
-                    cout << "You have successfully traded " << numChoiceOut << " " << choiceOut << " for "
+                    cout << "You have successfully traded " << numChoiceOut << " " << recChoice << " for "
                             << numIn << " " << recIn << ". Congratz.\n";
-                    cout << "Would you like to make another trade? (Yes or No)";
+                    cout << "would you like to make another trade? (Yes or No)\n";
                     string tradeAgain;
                     cin >> tradeAgain;
                     if (tradeAgain.compare("Yes")==0){
@@ -527,9 +1449,9 @@ void Catan::trade(){
                         turnplayerList[numTo].recIn(typeOut);
                     }
 
-                    cout << "You have successfully traded " << numChoiceOut << " " << choiceOut << " for "
+                    cout << "You have successfully traded " << numChoiceOut << " " << recChoice << " for "
                             << numIn << " " << recIn << ". Congratz.\n";
-                    cout << "Would you like to make another trade? (Yes or No)";
+                    cout << "would you like to make another trade? (Yes or No)\n";
                     string tradeAgain;
                     cin >> tradeAgain;
                     if (tradeAgain.compare("Yes")==0){
@@ -539,13 +1461,246 @@ void Catan::trade(){
                 }
             }while (invalid==true);
 
-
-
-
-//        }while(answer.compare("Yes")==0);
             endTrade:
-            inTrade=false;
+            cout << "Trade negotiations concluded.\n";
     }
+}
+
+void Catan::portTrade(){
+    string recOut;
+    string recIn;
+    int numOut=2;
+    bool invalid;
+    if (turnplayerList[currentPlayer].portsOwned.empty()){
+        cout << "Since you dont own any ports, you can only trade 4:1.\n";
+        trade4_1();
+        return;
+    }
+    string choice;
+    cout << "Would you like to trade 4:1 or trade with a port you own? (enter 4:1 or Port)\n\t";
+    do{
+        invalid=false;
+        cin >> choice;
+        if (!(choice.compare("4:1")==0)&&!(choice.compare("Port")==0)&&!(choice.compare("Back")==0)){
+            cout << "Invalid selection. Please Re-enter.\n\t";
+            cin >>choice;
+            invalid=true;
+        }
+    }while (invalid==true);
+    if (choice.compare("4:1")==0){
+        trade4_1();
+        return;
+    }
+    else if (choice.compare("Back")==0){
+        cout << "Closing trade negotiations.\n";
+        delay(2);
+        return;
+    }
+    else if (choice.compare("Port")==0){
+        cout << "You may choose from the following Ports:\n";
+        for (unsigned int i=0;i<turnplayerList[currentPlayer].portsOwned.size();i++){
+            if (board.ports[turnplayerList[currentPlayer].portsOwned[i]].type==0)
+                cout << "2 Stone for any 1 resource\n";
+            if (board.ports[turnplayerList[currentPlayer].portsOwned[i]].type==1)
+                cout << "2 Grain for any 1 resource\n";
+            if (board.ports[turnplayerList[currentPlayer].portsOwned[i]].type==2)
+                cout << "2 Lumber for any  resource\n";
+            if (board.ports[turnplayerList[currentPlayer].portsOwned[i]].type==3)
+                cout << "2 Wool for any 1 resource\n";
+            if (board.ports[turnplayerList[currentPlayer].portsOwned[i]].type==4)
+                cout << "2 Brick for any 1 resource\n";
+            if (board.ports[turnplayerList[currentPlayer].portsOwned[i]].type==5)
+                cout << "3 of any resource for any 1 resource\n";
+        }
+        cout << "To choose a port, enter the name of the resource, 3:1, or Back.\n\t";
+        cin >> recOut;
+        do{
+            invalid=false;
+            if(!(recOut.compare("Back")==0)&&!(recOut.compare("Stone")==0)&&!(recOut.compare("Grain")==0)&&!(recOut.compare("Lumber")==0)&&
+                !(recOut.compare("Wool")==0)&&!(recOut.compare("Brick")==0)&&!(recOut.compare("3:1")==0)){
+                cout << "Invalid selection. Please re-enter.\n\t";
+                cin >> recOut;
+                invalid=true;
+            }
+        }while(invalid==true);
+        if (recOut.compare("Back")==0){
+           cout << "Closing trade negotiations.\n";
+           delay(2);
+           return;
+        }
+        int port;
+        do{
+            if (recOut.compare("Back")==0){
+               cout << "Closing trade negotiations.\n";
+               delay(2);
+               return;
+            }
+            invalid=false;
+            if (recOut.compare("Stone")==0){
+                port=0;
+            }
+            else if (recOut.compare("Grain")==0){
+                port=1;
+            }
+            else if (recOut.compare("Lumber")==0){
+                port=2;
+            }
+            else if (recOut.compare("Wool")==0){
+                port=3;
+            }
+            else if (recOut.compare("Brick")==0){
+                port=4;
+            }
+            else if (recOut.compare("3:1")==0){
+                port=5;
+            }
+            for (unsigned int i=0;i<turnplayerList[currentPlayer].portsOwned.size();i++){
+                if (board.ports[turnplayerList[currentPlayer].portsOwned[i]].type==port)
+                    break;
+                if (i==(turnplayerList[currentPlayer].portsOwned.size()-1)){
+                    cout << "You do not own this port. Please select another port, or enter Back.\n";
+                    cin >> recOut;
+                    invalid=true;
+                }
+            }
+            if (port==5){
+                cout << "Please select the resource you want to give up 3 of.\n\t";
+                cin >> recOut;
+                do{
+                    invalid=false;
+                    if(!(recOut.compare("Back")==0)&&!(recOut.compare("Stone")==0)&&!(recOut.compare("Grain")==0)&&!(recOut.compare("Lumber")==0)&&
+                        !(recOut.compare("Wool")==0)&&!(recOut.compare("Brick")==0)){
+                        cout << "Invalid selection. Please re-enter.\n\t";
+                        cin >> recOut;
+                        invalid=true;
+                    }
+                }while(invalid==true);
+                if (recOut.compare("Back")==0){
+                   cout << "Closing trade negotiations.\n";
+                   delay(2);
+                   return;
+                }
+                numOut=3;
+            }
+        }while(invalid==true);
+        cout << "Now enter the resource you would like to receive.\n\t";
+        cin >> recIn;
+        do{
+            invalid=false;
+            if(!(recIn.compare("Back")==0)&&!(recIn.compare("Stone")==0)&&!(recIn.compare("Grain")==0)&&!(recIn.compare("Lumber")==0)&&
+                !(recIn.compare("Wool")==0)&&!(recIn.compare("Brick")==0)){
+                cout << "Invalid selection. Please re-enter.\n\t";
+                cin >> recIn;
+                invalid=true;
+            }
+        }while(invalid==true);
+        if (recIn.compare("Back")==0){
+           cout << "Closing trade negotiations.\n";
+           delay(2);
+           return;
+        }
+        if (recOut.compare("Stone")==0){
+            turnplayerList[currentPlayer].ResourceHand.stone-=numOut;
+        }
+        else if (recOut.compare("Grain")==0){
+            turnplayerList[currentPlayer].ResourceHand.stone-=numOut;
+        }
+        else if (recOut.compare("Lumber")==0){
+            turnplayerList[currentPlayer].ResourceHand.stone-=numOut;
+        }
+        else if (recOut.compare("Wool")==0){
+            turnplayerList[currentPlayer].ResourceHand.stone-=numOut;
+        }
+        else if (recOut.compare("Brick")==0){
+            turnplayerList[currentPlayer].ResourceHand.stone-=numOut;
+        }
+
+        if (recIn.compare("Stone")==0){
+            turnplayerList[currentPlayer].ResourceHand.stone+=1;
+        }
+        else if (recIn.compare("Grain")==0){
+            turnplayerList[currentPlayer].ResourceHand.grain+=1;
+        }
+        else if (recIn.compare("Lumber")==0){
+            turnplayerList[currentPlayer].ResourceHand.lumber+=1;
+        }
+        else if (recIn.compare("Wool")==0){
+            turnplayerList[currentPlayer].ResourceHand.wool+=1;
+        }
+        else if (recIn.compare("Brick")==0){
+            turnplayerList[currentPlayer].ResourceHand.brick+=1;
+        }
+    }
+    cout << "Congrats. You successfully trade " << numOut << " " << recOut << " for 1 " << recIn << ".\n";
+}
+
+void Catan::trade4_1(){
+    string recIn;
+    string recOut;
+    bool invalid;
+    cout << "Enter a resource to give or enter Back\n\t";
+    cin >> recOut;
+    do{ //sanitize input with giant if statement
+        invalid=false;
+        if(!(recOut.compare("Back")==0)&&!(recOut.compare("Stone")==0)&&!(recOut.compare("Grain")==0)&&!(recOut.compare("Lumber")==0)&&
+            !(recOut.compare("Wool")==0)&&!(recOut.compare("Brick")==0)){
+            cout << "Invalid selection. Please re-enter.\n\t";
+            cin >> recOut;
+            invalid=true;
+        }
+    }while(invalid==true);
+    if (recOut.compare("Back")==0){
+        cout << "Closing trade negotiations.\n";
+        delay(2);
+        return;
+    }
+    cout << "Now enter the resource you want to trade for, or enter Back.\n\t";
+    cin >> recIn;
+    do{ //sanitize input with giant if statement
+        invalid=false;
+        if(!(recIn.compare("Back")==0)&&!(recIn.compare("Stone")==0)&&!(recIn.compare("Grain")==0)&&!(recIn.compare("Lumber")==0)&&
+            !(recIn.compare("Wool")==0)&&!(recIn.compare("Brick")==0)){
+            cout << "Invalid selection. Please re-enter.\n\t";
+            cin >> recIn;
+            invalid=true;
+        }
+    }while(invalid==true);
+    if (recIn.compare("Back")==0){
+        cout << "Closing trade negotiations.\n";
+        delay(2);
+        return;
+    }
+    if (recOut.compare("Stone")==0){
+        turnplayerList[currentPlayer].ResourceHand.stone=turnplayerList[currentPlayer].ResourceHand.stone-4;
+    }
+    else if (recOut.compare("Grain")==0){
+        turnplayerList[currentPlayer].ResourceHand.grain=turnplayerList[currentPlayer].ResourceHand.grain-4;
+    }
+    else if (recOut.compare("Lumber")==0){
+        turnplayerList[currentPlayer].ResourceHand.lumber=turnplayerList[currentPlayer].ResourceHand.lumber-4;
+    }
+    else if (recOut.compare("Wool")==0){
+        turnplayerList[currentPlayer].ResourceHand.wool=turnplayerList[currentPlayer].ResourceHand.wool-4;
+    }
+    else if (recOut.compare("Brick")==0){
+        turnplayerList[currentPlayer].ResourceHand.brick=turnplayerList[currentPlayer].ResourceHand.brick-4;
+    }
+    if (recIn.compare("Stone")==0){
+        turnplayerList[currentPlayer].ResourceHand.stone++;
+    }
+    else if (recIn.compare("Grain")==0){
+        turnplayerList[currentPlayer].ResourceHand.grain++;
+    }
+    else if (recIn.compare("Lumber")==0){
+        turnplayerList[currentPlayer].ResourceHand.lumber++;
+    }
+    else if (recIn.compare("Wool")==0){
+        turnplayerList[currentPlayer].ResourceHand.wool++;
+    }
+    else if (recIn.compare("Brick")==0){
+        turnplayerList[currentPlayer].ResourceHand.brick++;
+    }
+    cout << "Successfully traded 4 " << recOut << " for 1 " << recIn << ".\n";
 }
 
 int Catan::diceRoll(Player currPlayer){
@@ -568,25 +1723,13 @@ int Catan::diceRoll(Player currPlayer){
 }
 
 void Catan::yield(int rollNum){
-//    terr tempTerrType;
-//    currDiceRoll = diceRoll(currPlayer);
-//    for(vector<HEXAGON>::iterator it=board.hexLayer.begin(); it != board.hexLayer.end(); it++) {
-//        tempTerrType = (*it).terrType;
-//        if(currDiceRoll == (*it).yieldNum){
-//            for (vector<VERTEX>::iterator it2=board.vertLayer.begin(); it2 != board.vertLayer.end(); it2++){
-//                if ((*it2).occupiedBy == PLAYER0)         //add +1 resource of tempTerrType to Player0's CardHand
-//                    turnplayerList[0].addRec(tempTerrType);
-//                else if ((*it2).occupiedBy == PLAYER1)    //add +1 resource of tempTerrType to Player1's CardHand
-//                    turnplayerList[1].addRec(tempTerrType);
-//                else if ((*it2).occupiedBy == PLAYER2)    //add +1 resource of tempTerrType to Player2's CardHand
-//                    turnplayerList[2].addRec(tempTerrType);
-//                else if((*it2).occupiedBy == PLAYER3)    //add +1 resource of tempTerrType to Player3's CardHand
-//                    turnplayerList[3].addRec(tempTerrType);
-//            }
-//        }
-//    }
 
-//    //check the victory points.
+    for (vector<Player>::iterator k =turnplayerList.begin(); k!=turnplayerList.end(); k++){
+        if ((*k).victoryPoints==7){
+
+        }
+    }
+
     if (rollNum<7){
         if (rollNum==2){ //yield resources for only number location
             for (int i=0;i<6;i++){
@@ -665,7 +1808,7 @@ Player* Catan::goesFirst(vector<Player> playerList)
         isFirst.clear();
         cout << "Players ";
         for (int i=0;i<(int)temp.size();i++)
-            cout << temp[i].getName() << " ";
+            cout << temp[i].getName() << " and ";
         cout << "tied for first. Rerolling for these players.\n";
         isFirst.push_back(*goesFirst(temp));
         return &isFirst[0];
@@ -696,7 +1839,7 @@ void Catan::decideOrder() {
         i++;
         turnCount++;
     }
-    cout << "back to beginning\n";
+//    cout << "back to beginning\n";
     i=0;
     while(i<firstLoc){
         turnplayerList.push_back((myplayerList[i]));
@@ -759,10 +1902,12 @@ void Catan::buildSettle(){
 }
 
 void Catan::buildRoad(){
-    cout << "Please select from the following edges to place your road";
-    for (int i=0;i<72;i++)
-        if(board.validRoad((playerNum) currentPlayer, i)==0)
+    cout << "Please select from the following edges to place your road.\n";
+    for (int i=0;i<72;i++){
+        if((board.validRoad(((playerNum)currentPlayer), i)==0)||(board.validRoad(((playerNum)currentPlayer), i)==2))
             cout << "\t" << i << endl;
+    }
+    cout<<"  ";
     int edgeChoice;
     cin >> edgeChoice;
     turnplayerList[currentPlayer].recOut(BRICK);
@@ -806,4 +1951,113 @@ playerNum Catan::intToNum(int intIn)
         return NOONE;
 }
 
+void Catan::drawfromDevDeck(){
+    turnplayerList[currentPlayer].recOut(STONE);
+    turnplayerList[currentPlayer].recOut(GRAIN);
+    turnplayerList[currentPlayer].recOut(WOOL);
 
+    int result = 1 + rand() % DevDeck.size;
+    cout << result << endl;
+    cout << "In drawfromDevDeck()\n";
+    if(result <= (DevDeck.soldierCard)){
+        cout << "drawing soldier" << endl;
+        devIn(SOLDIER);          //I worry about passing in player this way.
+        return;
+    }
+    else if (result <= ((DevDeck.soldierCard) + (DevDeck.victoryPointCard))){
+        cout << "drawing vp" << endl;
+        devIn(VICTORYPOINT);
+        return;
+    }
+    else if (result <= ((DevDeck.soldierCard) + (DevDeck.victoryPointCard) + (DevDeck.monopolyCard))){
+       cout << "drawing mono" << endl;
+        devIn(MONOPOLY);
+        return;
+    }
+    else if (result <= ((DevDeck.soldierCard) + (DevDeck.victoryPointCard) + (DevDeck.monopolyCard) + (DevDeck.roadBuildingCard))){
+        cout << "drawing rb" << endl;
+        devIn(ROAD_BUILDING);
+        return;
+    }
+    else if (result <= ((DevDeck.soldierCard) + (DevDeck.victoryPointCard) + (DevDeck.monopolyCard) + (DevDeck.roadBuildingCard) + (DevDeck.yearOfPlentyCard))){
+        cout << "drawing yop" << endl;
+        devIn(YEAR_OF_PLENTY);
+        return;
+    }
+    cout << "nothing happened :(\n";
+}
+
+void Catan::devIn(devType dt){
+    if(dt==SOLDIER){
+        turnplayerList[currentPlayer].DevHand.soldierCard++;
+        DevDeck.soldierCard--;
+    }
+    else if(dt==VICTORYPOINT){
+        turnplayerList[currentPlayer].DevHand.victoryPointCard++;
+        DevDeck.victoryPointCard--;
+    }
+    else if(dt==MONOPOLY){
+        turnplayerList[currentPlayer].DevHand.monopolyCard++;
+        DevDeck.monopolyCard--;
+    }
+    else if(dt==ROAD_BUILDING){
+        turnplayerList[currentPlayer].DevHand.roadBuildingCard++;
+        DevDeck.roadBuildingCard--;
+    }
+    else if(dt==YEAR_OF_PLENTY){
+        turnplayerList[currentPlayer].DevHand.yearOfPlentyCard++;
+        DevDeck.yearOfPlentyCard--;
+    }
+    DevDeck.size--;
+}
+
+void Catan::devOut(devType dt){
+
+    if(dt==SOLDIER){
+        turnplayerList[currentPlayer].DevPlayed.soldierCard++;
+       turnplayerList[currentPlayer].DevHand.soldierCard--;
+    }
+    else if(dt==VICTORYPOINT){
+        turnplayerList[currentPlayer].DevPlayed.victoryPointCard++;
+        turnplayerList[currentPlayer].DevHand.victoryPointCard--;
+    }
+    else if(dt==MONOPOLY){
+        turnplayerList[currentPlayer].DevPlayed.monopolyCard++;
+        turnplayerList[currentPlayer].DevHand.monopolyCard--;
+    }
+    else if(dt==ROAD_BUILDING){
+        turnplayerList[currentPlayer].DevPlayed.roadBuildingCard++;
+        turnplayerList[currentPlayer].DevHand.roadBuildingCard--;
+    }
+    else if(dt==YEAR_OF_PLENTY){
+        turnplayerList[currentPlayer].DevPlayed.yearOfPlentyCard++;
+        turnplayerList[currentPlayer].DevHand.yearOfPlentyCard--;
+    }
+    DevDeck.size--;
+}
+
+bool Catan::sufficientRec(string in){
+    if (in.compare("Settlement")==0){
+        //check to make sure that they have enough recourses in RecHand
+        if ((turnplayerList[currentPlayer].ResourceHand.brick >= 1) && (turnplayerList[currentPlayer].ResourceHand.lumber >= 1) && (turnplayerList[currentPlayer].ResourceHand.grain >= 1) && (turnplayerList[currentPlayer].ResourceHand.wool) >= 1) {
+            return true;
+        }
+    }
+    else if (in.compare("Road") == 0) {
+        if ((turnplayerList[currentPlayer].ResourceHand.brick >= 1) && (turnplayerList[currentPlayer].ResourceHand.lumber >= 1))
+            return true;
+    }
+
+    else if (in.compare("City") == 0) {
+        if ((turnplayerList[currentPlayer].ResourceHand.grain >= 2) && (turnplayerList[currentPlayer].ResourceHand.stone >= 3))
+            return true;
+    }
+
+    else if (in.compare("BuyDev") == 0) {
+        if ((turnplayerList[currentPlayer].ResourceHand.grain >= 1) && (turnplayerList[currentPlayer].ResourceHand.stone >= 1) && (turnplayerList[currentPlayer].ResourceHand.wool >= 1))
+            return true;
+    }
+
+
+    return false;
+}

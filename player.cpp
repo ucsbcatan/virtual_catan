@@ -9,21 +9,14 @@ Player::Player() {
 Player::Player(string name) {
 playerName = name;
 turnNum=NOONE;
+numRoads=0;
+victoryPoints = 0;
 }
 
 void Player::setScore(int currentScore) {
 //score = currentScore;
 return;
 }
-
-
-
-//int Player::makeRoll() {
-//    timeval Time;
-//    srand(Time.tv_usec); //seed rand with the time in microsecs
-//    int d = 1 + rand()%6; // number between 1 and 6;
-//    return d;
-//}
 
 int Player::pickRandCard() {
     int random;
@@ -35,6 +28,7 @@ int Player::pickRandCard() {
 string Player::getName() {
     return playerName;
 }
+
 void Player::recIn(resourceType playerCard) {
     if (playerCard == BRICK)
         ResourceHand.brick++;

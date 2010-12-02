@@ -2,7 +2,11 @@
 // implementation for gameboard.h file
 #include "gameboard.h"
 
-Gameboard::Gameboard()
+Gameboard::Gameboard(){
+
+}
+
+Gameboard::Gameboard(bool fromNewGame)
 {
     setHexLayer();
     setVertLayer();
@@ -19,11 +23,22 @@ Gameboard::Gameboard()
     for(i=0;i<4;i++)
         unassTerrain.push_back(PASTURE);
     unassTerrain.push_back(DESERT);
-//    cout << "size of unassTerrain prior to assignments is " << unassTerrain.size() << endl;
-    assTerrain();
-    setYield();
-    setBandit();
+    for (int i=0;i<6;i++){
+            if (i==5){
+                for (int j=0;j<4;j++){
+                    unassPorts.push_back(i);}
+            }
+            else
+                unassPorts.push_back(i);
+    }
 
+    if(fromNewGame){
+        assTerrain();
+        setBandit();
+    }
+
+        setYield();
+        setPorts();
 }
 
 HEXAGON::HEXAGON(int hexNum){
@@ -523,7 +538,7 @@ EDGE::EDGE(int edgeNum){
     }
     else if(edgeNum==19){
         adjVert.push_back(9);
-        adjVert.push_back(9);
+        adjVert.push_back(19);
     }
     else if(edgeNum==20){
         adjVert.push_back(11);
@@ -745,6 +760,47 @@ YIELDNUM::YIELDNUM(int id, int num1, int num2) {
 YIELDNUM::YIELDNUM(int id, int num1) {
     this->num = id;
     hex1=num1;
+}
+
+PORT::PORT(int terr, int num){
+    player=NOONE;
+    type=terr;
+    if (num==0){
+        loc1=0;
+        loc2=1;
+    }
+    else if (num==1){
+        loc1=3;
+        loc2=4;
+    }
+    else if (num==2){
+        loc1=14;
+        loc2=15;
+    }
+    else if (num==3){
+        loc1=26;
+        loc2=37;
+    }
+    else if (num==4){
+        loc1=46;
+        loc2=45;
+    }
+    else if (num==5){
+        loc1=51;
+        loc2=50;
+    }
+    else if (num==6){
+        loc1=48;
+        loc2=47;
+    }
+    else if (num==7){
+        loc1=38;
+        loc2=28;
+    }
+    else if (num==8){
+        loc1=17;
+        loc2=7;
+    }
 }
 
 void Gameboard::setHexLayer()
@@ -1000,11 +1056,25 @@ void Gameboard::setYield()
 //         cout << "something went wrong, list of hexagons is not empty\n";
 }
 
-
 void Gameboard::setBandit()
 {
     hexLayer[desHex].hasBandit=true;
     banditLoc=desHex;
+}
+
+void Gameboard::setPorts()
+{
+    int assDex;
+    for (int i=0;i<9;i++){
+        timeval Time;
+        gettimeofday(&Time, NULL);
+        long timeseed=Time.tv_usec ;
+        srand(timeseed);
+        assDex=rand()%unassPorts.size();
+        PORT make(unassPorts[assDex],i);
+        ports.push_back(make);
+        unassPorts.erase(unassPorts.begin()+assDex);
+    }
 }
 
 int Gameboard::moveBandit(int hexNum)
@@ -1061,9 +1131,12 @@ int Gameboard::validRoad(playerNum currPlayer, int edgeNum)
             return 2; //first road placement or subsequent ones is valid
 
     for (int i=0;i<2;i++){
-        for (unsigned int j=0;j< (vertLayer[edgeLayer[edgeNum].adjVert[i]].adjEdge.size());i++)
+        //cout << "stepping through adjacent vertices.\n";
+        for (unsigned int j=0;j< (vertLayer[edgeLayer[edgeNum].adjVert[i]].adjEdge.size());j++){ //it was here
+            //cout << "stepping through adjacent vertices' adjacent edges.\n";
             if (((edgeLayer[vertLayer[edgeLayer[edgeNum].adjVert[i]].adjEdge[j]].occupiedBy)== currPlayer))
                 return 0; //valid settlement location
+        }
     }
     return 3; //there are none of the player's roads adjacent to any of these edges
 }

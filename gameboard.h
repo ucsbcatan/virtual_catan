@@ -52,9 +52,18 @@ struct YIELDNUM{
     int hex2;
 };
 
+struct PORT{
+    PORT(int,int); //constructor takes int referring to resource type, 6 for 3:1, and port location
+    int loc1; //location of first vertex
+    int loc2; //location of second vertex
+    int type; //type of port
+    playerNum player; //player who owns port
+};
+
 class Gameboard {
  public:
   Gameboard();
+  Gameboard(bool fromNewGame);
   int moveBandit(int hexNum);
   int getBanditLoc();
   int validSettle(playerNum currPlayer, int vertNum);
@@ -66,6 +75,7 @@ class Gameboard {
   vector<VERTEX> vertLayer; //vector containing all vetices
   vector<EDGE> edgeLayer; //vector containging all edges
   vector<YIELDNUM> yieldNums; //vector containing all yield numbers
+  vector<PORT> ports;         //vector containing all ports
   void setSettle(playerNum currPlayer, int vertNum);
   void setCity(playerNum currPlayer, int vertNum);
   void setRoad(playerNum currPlayer, int edgeNum);
@@ -78,7 +88,9 @@ class Gameboard {
   void setYield();
   void setBandit();
   void assTerrain();
+  void setPorts();
 
+  vector<int> unassPorts;
   vector<terr> unassTerrain; //vector containing terrain yet to be assigned
   int desHex; //hexagon holding desert tile
   int banditLoc; //hexagon location of bandit
