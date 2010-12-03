@@ -19,7 +19,6 @@ Catan::Catan(bool fromNewGame){
        Gameboard newboard(false);
        board = newboard;
    }
-    cout<<"dickslang\n";
     loadGame();
 }
 
@@ -144,6 +143,10 @@ void Catan::saveGame(){
         myfile <<"\n";
     }
 
+    //banditLoc
+    myfile << board.getBanditLoc();
+    myfile <<"\n";
+
     //Player info
     for (vector<Player>::iterator k =turnplayerList.begin(); k!=turnplayerList.end(); k++){
         //print player's resources
@@ -195,6 +198,12 @@ void Catan::saveGame(){
         //print player's turnNum
         myfile << (*k).getTurn();
         myfile << "\n";
+
+        //print player's vector of portsOwned
+        for (vector<int>::iterator i =(*k).portsOwned.begin(); i!=(*k).portsOwned.end(); i++){
+            myfile<< *i <<" ";
+        }
+        myfile<<"\n";
     }
 
     myfile.close();
@@ -411,10 +420,20 @@ void Catan::loadGame(){
             }
             dickslang=0;
         }
-        //PLAYER0-2's information FIXXXXXXXXXXX THISSSSSSSSSSSSSSSSSSSSSSSSSs
-        else if((counter>=169) && (counter <= 189)){
+
+        //read and initialize banditLoc
+        else if(counter==169){
+            while(ss.good()){
+                ss >> val;
+                board.setBanditLoc(val);
+            }
+        }
+
+
+        //PLAYER 0-2's information
+        else if((counter>=170) && (counter <= 193)){
                 //PLAYER0's ResourceHand
-                if(counter==(169)){
+                if(counter==(170)){
                     while(ss.good()){
                         ss >> val;
                         if(dickslang==0)
@@ -433,14 +452,14 @@ void Catan::loadGame(){
                     dickslang=0;
                 }
                 //PLAYER0's VictoryPoints
-                else if(counter==170){
+                else if(counter==171){
                     while(ss.good()){
                         ss >> val;
                         turnplayerList[0].victoryPoints = val;
                     }
                 }
                 //PLAYER0's DevPlayed
-                else if(counter==171){
+                else if(counter==172){
                     while(ss.good()){
                         ss >> val;
                         if(dickslang==0)
@@ -461,7 +480,7 @@ void Catan::loadGame(){
                     dickslang = 0;
                 }
                 //PLAYER0's DevHand
-                else if(counter==172){
+                else if(counter==173){
                     while(ss.good()){
                         ss >> val;
                         if(dickslang==0)
@@ -482,7 +501,7 @@ void Catan::loadGame(){
                     dickslang = 0;
                 }
                 //PLAYER0's PieceHand
-                else if(counter==173){
+                else if(counter==174){
                     while(ss.good()){
                         ss >> val;
                         if(dickslang==0)
@@ -497,7 +516,7 @@ void Catan::loadGame(){
                     dickslang=0;
                 }
                 //PLAYER0's Honors
-                else if(counter==174){
+                else if(counter==175){
                     while(ss.good()){
                         ss >> boolean;
                         if(dickslang==0)
@@ -511,7 +530,7 @@ void Catan::loadGame(){
                 }
 
                 //PLAYER0's Playerturn
-                else if(counter==175){
+                else if(counter==176){
                     while(ss.good()){
                         ss >> val;
                         if (val==0)
@@ -524,12 +543,17 @@ void Catan::loadGame(){
                             turnplayerList[0].setTurn(PLAYER3);
                     }
                 }
-
-
+                //PLAYER0's portsOwned
+                else if(counter==177){
+                    while(ss.good()){
+                        ss >> val;
+                        turnplayerList[0].portsOwned.push_back(val);
+                    }
+                }
 
 
                 //PLAYER1's ResourceHand
-                if(counter==(176)){
+                if(counter==(178)){
                     while(ss.good()){
                         ss >> val;
                         if(dickslang==0)
@@ -548,14 +572,14 @@ void Catan::loadGame(){
                     dickslang=0;
                 }
                 //PLAYER1's VictoryPoints
-                else if(counter==177){
+                else if(counter==179){
                     while(ss.good()){
                         ss >> val;
                         turnplayerList[1].victoryPoints = val;
                     }
                 }
                 //PLAYER1's DevPlayed
-                else if(counter==178){
+                else if(counter==180){
                     while(ss.good()){
                         ss >> val;
                         if(dickslang==0)
@@ -576,7 +600,7 @@ void Catan::loadGame(){
                     dickslang = 0;
                 }
                 //PLAYER1's DevHand
-                else if(counter==179){
+                else if(counter==181){
                     while(ss.good()){
                         ss >> val;
                         if(dickslang==0)
@@ -597,7 +621,7 @@ void Catan::loadGame(){
                     dickslang = 0;
                 }
                 //PLAYER1's PieceHand
-                else if(counter==180){
+                else if(counter==182){
                     while(ss.good()){
                         ss >> val;
                         if(dickslang==0)
@@ -612,7 +636,7 @@ void Catan::loadGame(){
                     dickslang=0;
                 }
                 //PLAYER1's Honors
-                else if(counter==181){
+                else if(counter==183){
                     while(ss.good()){
                         ss >> boolean;
                         if(dickslang==0)
@@ -626,7 +650,7 @@ void Catan::loadGame(){
                 }
 
                 //PLAYER1's Playerturn
-                else if(counter==182){
+                else if(counter==184){
                     while(ss.good()){
                         ss >> val;
                         if (val==0)
@@ -640,9 +664,17 @@ void Catan::loadGame(){
                     }
                 }
 
+                //PLAYER1's portsOwned
+                else if(counter==185){
+                    while(ss.good()){
+                        ss >> val;
+                        turnplayerList[1].portsOwned.push_back(val);
+                    }
+                }
+
 
                 //PLAYER2's ResourceHand
-                if(counter==(183)){
+                if(counter==(186)){
                     while(ss.good()){
                         ss >> val;
                         if(dickslang==0)
@@ -661,14 +693,14 @@ void Catan::loadGame(){
                     dickslang=0;
                 }
                 //PLAYER2's VictoryPoints
-                else if(counter==184){
+                else if(counter==187){
                     while(ss.good()){
                         ss >> val;
                         turnplayerList[2].victoryPoints = val;
                     }
                 }
                 //PLAYER2's DevPlayed
-                else if(counter==185){
+                else if(counter==188){
                     while(ss.good()){
                         ss >> val;
                         if(dickslang==0)
@@ -689,7 +721,7 @@ void Catan::loadGame(){
                     dickslang = 0;
                 }
                 //PLAYER2's DevHand
-                else if(counter==186){
+                else if(counter==189){
                     while(ss.good()){
                         ss >> val;
                         if(dickslang==0)
@@ -710,7 +742,7 @@ void Catan::loadGame(){
                     dickslang = 0;
                 }
                 //PLAYER2's PieceHand
-                else if(counter==187){
+                else if(counter==190){
                     while(ss.good()){
                         ss >> val;
                         if(dickslang==0)
@@ -725,7 +757,7 @@ void Catan::loadGame(){
                     dickslang=0;
                 }
                 //PLAYER2's Honors
-                else if(counter==188){
+                else if(counter==191){
                     while(ss.good()){
                         ss >> boolean;
                         if(dickslang==0)
@@ -739,7 +771,7 @@ void Catan::loadGame(){
                 }
 
                 //PLAYER2's Playerturn
-                else if(counter==189){
+                else if(counter==192){
                     while(ss.good()){
                         ss >> val;
                         if (val==0)
@@ -752,6 +784,14 @@ void Catan::loadGame(){
                             turnplayerList[2].setTurn(PLAYER3);
                     }
                 }
+
+                //PLAYER2's portsOwned
+                else if(counter==193){
+                    while(ss.good()){
+                        ss >> val;
+                        turnplayerList[2].portsOwned.push_back(val);
+                    }
+                }
             }
 
 
@@ -759,7 +799,7 @@ void Catan::loadGame(){
 
         if(numPlayers==4){
             //PLAYER3's ResourceHand
-            if(counter==(190)){
+            if(counter==(194)){
                 while(ss.good()){
                     ss >> val;
                     if(dickslang==0)
@@ -778,14 +818,14 @@ void Catan::loadGame(){
                 dickslang=0;
             }
             //PLAYER3's VictoryPoints
-            else if(counter==191){
+            else if(counter==195){
                 while(ss.good()){
                     ss >> val;
                     turnplayerList[3].victoryPoints = val;
                 }
             }
             //PLAYER3's DevPlayed
-            else if(counter==192){
+            else if(counter==196){
                 while(ss.good()){
                     ss >> val;
                     if(dickslang==0)
@@ -806,7 +846,7 @@ void Catan::loadGame(){
                 dickslang = 0;
             }
             //PLAYER3's DevHand
-            else if(counter==193){
+            else if(counter==197){
                 while(ss.good()){
                     ss >> val;
                     if(dickslang==0)
@@ -827,7 +867,7 @@ void Catan::loadGame(){
                 dickslang = 0;
             }
             //PLAYER3's PieceHand
-            else if(counter==194){
+            else if(counter==198){
                 while(ss.good()){
                     ss >> val;
                     if(dickslang==0)
@@ -842,7 +882,7 @@ void Catan::loadGame(){
                 dickslang=0;
             }
             //PLAYER3's Honors
-            else if(counter==195){
+            else if(counter==199){
                 while(ss.good()){
                     ss >> boolean;
                     if(dickslang==0)
@@ -856,7 +896,7 @@ void Catan::loadGame(){
             }
 
             //PLAYER3's Playerturn
-            else if(counter==196){
+            else if(counter==200){
                 while(ss.good()){
                     ss >> val;
                     if (val==0)
@@ -867,6 +907,14 @@ void Catan::loadGame(){
                         turnplayerList[3].setTurn(PLAYER2);
                     if (val==3)
                         turnplayerList[3].setTurn(PLAYER3);
+                }
+            }
+
+            //PLAYER3's portsOwned
+            else if(counter==201){
+                while(ss.good()){
+                    ss >> val;
+                    turnplayerList[3].portsOwned.push_back(val);
                 }
             }
         }
@@ -929,7 +977,7 @@ void Catan::placeSettlement(Player& currPlayer, int vertNum){
             currPlayer.portsOwned.push_back(8);
         }
         cout << "settlement placed\n\n";
-        (currPlayer.victoryPoints)++;
+        currPlayer.victoryPoints++;
     }
 return;
 }
@@ -1014,7 +1062,7 @@ void Catan::placeRoad(Player currPlayer, int edgeNum){
     }
 }
 
-void Catan::placeCity(Player currPlayer, int vertNum){
+void Catan::placeCity(Player& currPlayer, int vertNum){
     if (board.vertLayer[vertNum].occupiedBy!= currPlayer.getTurn()){
         cout << "\nYour settlement is not at this location.\nPlease select another location.\n";
         cin >> vertNum;
@@ -1024,17 +1072,32 @@ void Catan::placeCity(Player currPlayer, int vertNum){
     else{
         board.setCity(currPlayer.getTurn(), vertNum);
         cout << "city placed\n";
-        (currPlayer.victoryPoints)++;
+        currPlayer.victoryPoints++;
     }
 }
 
-string Catan::findLongestRoad() {
-/*for (vector<Player>::iterator it = playerList.begin(); it != playerList.end(); it++) {
-if ((((*it).CardHand).longestRoadCard) == 1);
-// cout << (*it).getName();
+void Catan::setLongestRoad() {
 
-}*/
-    return "na";
+}
+
+void Catan::setLargestArmy(){
+    //if no one has a soldier card played, return
+    int currGreatest = 0;
+    playerNum greatestPlayer = NOONE;
+    for (vector<Player>::iterator it = turnplayerList.begin(); it != turnplayerList.end(); it++) {
+        if((*it).DevPlayed.soldierCard>currGreatest){
+            currGreatest = (*it).DevPlayed.soldierCard;
+            //remove honor and victory points from current greatestPlayer
+            if(greatestPlayer!=NOONE){
+                turnplayerList[greatestPlayer].hasLargestArmy = false;
+                turnplayerList[greatestPlayer].victoryPoints--;
+            }
+            //give honor and set new greatestPlayer
+            greatestPlayer=(*it).getTurn();
+            (*it).hasLargestArmy = true;
+            (*it).victoryPoints++;
+        }
+    }
 }
 
 void Catan::trade(){
@@ -1498,7 +1561,7 @@ void Catan::portTrade(){
     }
     else if (choice.compare("Port")==0){
         cout << "You may choose from the following Ports:\n";
-        for (unsigned int i=0;i<turnplayerList[currentPlayer].portsOwned.size();i++){
+        for (unsigned int i=0;i<(turnplayerList[currentPlayer].portsOwned.size()-1);i++){
             if (board.ports[turnplayerList[currentPlayer].portsOwned[i]].type==0)
                 cout << "2 Stone for any 1 resource\n";
             if (board.ports[turnplayerList[currentPlayer].portsOwned[i]].type==1)
@@ -1865,8 +1928,9 @@ void Catan::buildSettle(){
                 avail=false;
         }
         if (avail==true)
-            cout << "\t" << i << endl;
+            cout << "\t" << i;
     }
+    cout<<endl;
     int hexChoice;
     cin >> hexChoice;
     cout << "Select a vertex to build at:\t";
@@ -2060,4 +2124,192 @@ bool Catan::sufficientRec(string in){
 
 
     return false;
+}
+
+bool Catan::checksForWinner() {
+    for (vector<Player>::iterator it = turnplayerList.begin(); it != turnplayerList.end(); it++){
+        if ((*it).victoryPoints == 8){
+            declareWinner(*it);
+            return true; // or call declare winner function
+        }
+    }
+}
+
+void Catan::declareWinner(Player player) {
+    cout<<endl<<endl;
+    cout<<"   ******************************************"<<endl;
+    cout<<" //                                          \\\\"<<endl;
+    cout<<"||    Congratualtions "<<player.getName();
+    for(int i=0; i<= (23-((player.getName()).size())); i++){
+        cout<<" ";
+    }
+    cout<<"||"<<endl;
+    cout<<"||                                            ||"<<endl;
+    cout<<"||       You've won the game!!!!!!            ||"<<endl;
+    cout<<" \\\\                                          //"<<endl;
+    cout<<"   ******************************************"<<endl<<endl;
+}
+
+void Catan::check7(int roll){
+    if (!(roll==7))
+        return;
+    bool invalid;
+    cout << "\t##################################\n\t##\tA 7 was rolled!!!\t##\n\t##################################\n";
+    for (vector<Player>::iterator k =(turnplayerList).begin(); k!=(turnplayerList).end(); k++){
+        int totalCards=((*k).ResourceHand.stone+(*k).ResourceHand.grain+(*k).ResourceHand.lumber+(*k).ResourceHand.wool+
+                        (*k).ResourceHand.brick);
+        if (totalCards>7){
+            string choice;
+            cout << (*k).getName() << " has " << totalCards << " resources. You must discard " << totalCards/2 << " of these.\n";
+            for (int i=0;i<(totalCards/2);i++){
+                cout << "Please select a resource to discard:";
+                cout << "Stone= " << (*k).ResourceHand.stone << endl;
+                cout << "Grain= " << (*k).ResourceHand.grain << endl;
+                cout << "Lumber= " << (*k).ResourceHand.lumber << endl;
+                cout << "Wool= " << (*k).ResourceHand.wool << endl;
+                cout << "Brick= " << (*k).ResourceHand.brick << "\n\t";
+                cin >> choice;
+                do{
+                    invalid=false;
+                    if (choice.compare("Stone")==0)
+                        (*k).ResourceHand.stone--;
+                    else if (choice.compare("Grain")==0)
+                        (*k).ResourceHand.grain--;
+                    else if (choice.compare("Lumber")==0)
+                        (*k).ResourceHand.lumber--;
+                    else if (choice.compare("Wool")==0)
+                        (*k).ResourceHand.wool--;
+                    else if (choice.compare("Brick")==0)
+                        (*k).ResourceHand.brick--;
+                    else{
+                        cout << "Invalid selection. Please re-enter.\n\t";
+                        cin >> choice;
+                        invalid=true;
+                    }
+                }while(invalid==true);
+            }
+        }
+    }
+    movingBandit();
+}
+
+void Catan::movingBandit(){
+    bool invalid;
+    cout << turnplayerList[currentPlayer].getName() << ",you may now move the bandit. Please select a hexagon to move him to.\n\t";
+    string newLoc;
+    int locNum;
+    cin >> newLoc;
+    do{
+        invalid=false;
+        for (int i=0;i<(int)newLoc.size();i++){
+            if(isdigit(newLoc[i])==false){
+                cout << "Invalid selection. Please re-enter.\n\t";
+                cin >> newLoc;
+                invalid=true;
+                break;
+            }
+        }
+        if (invalid==false){
+            locNum=atoi(newLoc.c_str());
+            if ((locNum>18)||(locNum<0)||(board.hexLayer[locNum].hasBandit==true)){
+                cout << "Invalid selection. Please re-enter.\n\t";
+                cin >> newLoc;
+                invalid=true;
+            }
+        }
+    }while(invalid==true);
+    board.moveBandit(locNum);
+    vector<int> choices;
+    for (int i=0;i<6;i++){
+        if(board.vertLayer[board.hexLayer[locNum].assVert[i]].occupiedBy!=NOONE&&
+           board.vertLayer[board.hexLayer[locNum].assVert[i]].occupiedBy!=turnplayerList[currentPlayer].getTurn()){
+           choices.push_back((int)(board.vertLayer[board.hexLayer[locNum].assVert[i]].occupiedBy));
+        }
+        if ((i==5)&&(choices.size()==0)){
+            cout << "Nobody around for the bandit to steal from.\n";
+            delay(2);
+            return;
+        }
+    }
+    cout << "Who would you like to steal from?\n";
+    string thiefChoice;
+    for (int i=0;i<(int)choices.size();i++)
+        cout << turnplayerList[(int)(choices[i])].getName() << endl;
+    cout << "\t";
+    cin >> thiefChoice;
+    int recChoice;
+    do{
+        invalid=false;
+        for (int i=0;i<(int)choices.size();i++){
+            if (thiefChoice.compare(turnplayerList[(int)(choices[i])].getName())==0){
+                if((turnplayerList[(int)(choices[i])].ResourceHand.stone==0)&&(turnplayerList[(int)(choices[i])].ResourceHand.grain==0)&&
+                   (turnplayerList[(int)(choices[i])].ResourceHand.lumber==0)&&(turnplayerList[(int)(choices[i])].ResourceHand.wool==0)&&
+                   (turnplayerList[(int)(choices[i])].ResourceHand.brick==0)){
+                   cout << "This player doesnt have any resources. Too Bad.";
+                   delay(2);
+                   return;
+                }
+                else{
+                    timeval Time;
+                    gettimeofday(&Time, NULL);
+                    long timeseed=Time.tv_usec;
+                    srand(timeseed);
+                    do{
+                        invalid=false;
+                        recChoice=rand()%5;
+                        if (recChoice==0){
+                            if (turnplayerList[(int)(choices[i])].ResourceHand.stone==0){
+                                invalid=true;
+                                continue;
+                            }
+                            turnplayerList[(int)(choices[i])].ResourceHand.stone--;
+                            turnplayerList[currentPlayer].ResourceHand.stone++;
+
+                        }
+                        else if (recChoice==1){
+                            if (turnplayerList[(int)(choices[i])].ResourceHand.grain==0){
+                                invalid=true;
+                                continue;
+
+                            }
+                            turnplayerList[(int)(choices[i])].ResourceHand.grain--;
+                            turnplayerList[currentPlayer].ResourceHand.grain++;
+
+                        }
+                        else if (recChoice==2){
+                             if (turnplayerList[(int)(choices[i])].ResourceHand.lumber==0){
+                                invalid=true;
+                                continue;
+                            }
+                            turnplayerList[(int)(choices[i])].ResourceHand.lumber--;
+                            turnplayerList[currentPlayer].ResourceHand.lumber++;
+
+                        }
+                        else if (recChoice==3){
+                            if (turnplayerList[(int)(choices[i])].ResourceHand.wool==0){
+                                invalid=true;
+                                continue;
+                            }
+                            turnplayerList[(int)(choices[i])].ResourceHand.wool--;
+                            turnplayerList[currentPlayer].ResourceHand.wool++;
+                        }
+                        else if (recChoice==4){
+                            if (turnplayerList[(int)(choices[i])].ResourceHand.brick==0){
+                                 invalid=true;
+                                continue;
+                            }
+                            turnplayerList[(int)(choices[i])].ResourceHand.brick--;
+                            turnplayerList[currentPlayer].ResourceHand.brick++;
+                        }
+                    }while(invalid==true);
+                }
+            return;
+            }
+            if (i==((int)choices.size()-1)){
+                cout << "Invalid selection. Please re-enter.";
+                cin >> thiefChoice;
+                invalid=true;
+            }
+        }
+    }while(invalid==true);
 }

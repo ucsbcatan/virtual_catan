@@ -27,6 +27,7 @@ void GameState(Catan GameProfile);
 void Turn(Catan GameProfile, bool fromLoad);
 void buildRoad();
 void printBoard(Catan g);
+void printBoardGameState(Catan g);
 vector<string> makePlayers(int);
 string infO(Catan GameProfile, int a, int b);
 
@@ -64,17 +65,15 @@ void MainMenu(){
 
     while(menuOpen){
 
-        cout<<"\n\nMain Menu:    Which option do you want?:\n\nNewGame\nLoadGame\nOptions\nExit\n      ";
+        cout<<"\n\nMain Menu:    Which option do you want?:\n\nNewGame\nLoadGame\nExit\n      ";
         string input;
         cin>>input;
 
         if (input.compare("NewGame")==0)
             NewGame();
-        if (input.compare("LoadGame")==0)
+        else if (input.compare("LoadGame")==0)
             LoadGame();
-        if (input.compare("Options")==0)
-            Options();
-        if (input.compare("Exit")==0){
+        else if (input.compare("Exit")==0){
             cout<<"\n\t**************************\n \t**THANK YOU FOR PLAYING!**\n\t**************************";
             delay(3);
             exit(0);
@@ -95,10 +94,9 @@ void NewGame(){
 
     inNewGame = true;
     while (inNewGame){
-        cout<<"\nWhat kind of game do you want to start?\nQuickMatch\nCustomGame\nBack\n      ";
+        cout<<"\nWhat kind of game do you want to start?\nQuickMatch\nBack\n      ";
         string input;
         cin>>input;
-
         if(input.compare("QuickMatch")==0){
             cout<<"\nHow many players? (3 or 4)\n\n";
             int numPlayers;
@@ -110,12 +108,8 @@ void NewGame(){
             vector<string> nameList=makePlayers(numPlayers);
             Catan GameProfile(numPlayers,nameList,true);
             GameState(GameProfile);
+            inNewGame=false;
         }
-
-        if(input.compare("CustomGame")==0){
-            //unimplemented
-        }
-
         if(input.compare("Back")==0){
             inNewGame=false;
             }
@@ -141,6 +135,7 @@ void LoadGame(){
         if(input.compare("Yes")==0){
             Catan GameProfile(false);
             Turn(GameProfile,true);
+            inLoadGame=false;
         }
         else if(input.compare("No")==0){
             inLoadGame=false;
@@ -152,19 +147,6 @@ void LoadGame(){
 }
 
 
-
-        /*-----------------------------------*\
-        |         Options (Function)          |
-        \*-----------------------------------*/
-
-//THis is the description about how the options feature works
-
-
-void Options(){
-    //
-    //
-    return;
-}
 
 
 
@@ -318,7 +300,15 @@ void GameState(Catan GameProfile){
 
 
 
+        /*---------------------------------*\
+        |     _____         __              |
+        |       |   |    | |  \ |\  |       |
+        |       |   |    | |__/ | \ |       |
+        |       |    \__/  |  \ |  \|       |
+        |                                   |
+        \*---------------------------------*/
 
+//This is the description about what happens in the Turn function
 
 void Turn(Catan GameProfile, bool fromLoad){
 
@@ -330,12 +320,15 @@ void Turn(Catan GameProfile, bool fromLoad){
     if(fromLoad==false){
         int roll1=GameProfile.diceRoll(GameProfile.turnplayerList[0]);
         int roll2=GameProfile.diceRoll(GameProfile.turnplayerList[0]);
-        GameProfile.yield(roll1+roll2);
-        cout << "total roll was a " << roll1+roll2 << endl;
+        int total=roll1+roll2;
+        GameProfile.yield(total);
+        cout << "total roll was a " << total << endl;
+        GameProfile.check7(total);
     }
 
     while(inGame){
         cout.flush();
+       //GameProfile.
         printBoard(GameProfile);
         cout << "\nCurrent Player Turn is: " << GameProfile.turnplayerList[GameProfile.currentPlayer].getName() <<" ("<<GameProfile.currentPlayer<<")"<< endl;
         cout << "\nChoose from the following list of moves:";
@@ -349,8 +342,10 @@ void Turn(Catan GameProfile, bool fromLoad){
                 GameProfile.endTurn();
                 int roll1=GameProfile.diceRoll(GameProfile.turnplayerList[GameProfile.currentPlayer]);
                 int roll2=GameProfile.diceRoll(GameProfile.turnplayerList[GameProfile.currentPlayer]);
-                GameProfile.yield(roll1+roll2);
-                cout << "total roll was a " << roll1+roll2 << endl;
+                int total = roll1+roll2;
+                GameProfile.yield(total);
+                cout << "total roll was a " << total << endl;
+                GameProfile.check7(total);
             }
             else if (input.compare("Trade") == 0){
                             string choice;
@@ -419,8 +414,13 @@ void Turn(Catan GameProfile, bool fromLoad){
                 string decide;
                 cin >> decide;
                 if (decide.compare("yes") == 0){
+                    cout<<"Do you want to save your game first? (yes or no)";
+                    string in;
+                    cin >> in;
+                    if(in.compare("yes")==0){
+                        GameProfile.saveGame();
+                    }
                     inGame = false;
-                    inNewGame= false;
                 }
             }
             else if (input.compare("BuildingCosts")==0){
@@ -449,6 +449,13 @@ void Turn(Catan GameProfile, bool fromLoad){
                 cin >> input;
             }
         }while(invalid==true);
+
+
+        if (GameProfile.checksForWinner()){
+            delay(3);
+            inGame=false;
+        }
+
     }
 }
 
@@ -493,58 +500,80 @@ return namesIn;
 
 
 
+
+
+
+
+        /*-----------------------------------*\
+        |        PrintBoard (Function)        |
+        \*-----------------------------------*/
+
 void printBoard(Catan g){
 
-    cout<<"                        "<<infO(g,1,1)<<"             "<<infO(g,1,3)<<"             "<<infO(g,1,5)<< endl;
-    cout<<"                       /   \\           /   \\           /   \\ " << endl;
-    cout<<"                    "<<infO(g,2,0)<<"     "<<infO(g,3,1)<<"     "<<infO(g,2,2)<<"     "<<infO(g,3,3)<<"     "<<infO(g,2,4)<<"     "<<infO(g,3,5)<< endl;
-    cout<<"                   /           \\   /           \\   /           \\ "<<endl;
-    cout<<"                "<<infO(g,1,0)<<"             "<<infO(g,1,2)<<"             "<<infO(g,1,4)<<"             "<<infO(g,1,6)<<endl;
-    cout<<"                 |   "<<infO(g,5,0)<<"   |   "<<infO(g,5,1)<<"   |   "<<infO(g,5,2)<<"   |"<<endl;
-    cout<<"                "<<infO(g,4,6)<<"      "<<infO(g,6,0)<<"     "<<infO(g,4,7)<<"      "<<infO(g,6,1)<<"     "<<infO(g,4,8)<<"      "<<infO(g,6,2)<<"     "<<infO(g,4,9)<<""<<endl;
-    cout<<"                 |     "<<infO(g,7,0)<<"    |     "<<infO(g,7,1)<<"    |     "<<infO(g,7,2)<<"    |"<<endl;
-    cout<<"                "<<infO(g,1,8)<<"             "<<infO(g,1,10)<<"             "<<infO(g,1,12)<<"             "<<infO(g,1,14)<<""<<endl;
-    cout<<"               /   \\           /   \\           /   \\           /   \\"<<endl;
-    cout<<"            "<<infO(g,2,10)<<"     "<<infO(g,3,11)<<"     "<<infO(g,2,12)<<"     "<<infO(g,3,13)<<"     "<<infO(g,2,14)<<"     "<<infO(g,3,15)<<"     "<<infO(g,2,16)<<"     "<<infO(g,3,17)<<endl;
-    cout<<"           /           \\   /           \\   /           \\   /           \\"<<endl;
-    cout<<"        "<<infO(g,1,7)<<"             "<<infO(g,1,9)<<"             "<<infO(g,1,11)<<"             "<<infO(g,1,13)<<"             "<<infO(g,1,15)<<endl;
-    cout<<"         |   "<<infO(g,5,3)<<"   |   "<<infO(g,5,4)<<"   |   "<<infO(g,5,5)<<"   |   "<<infO(g,5,6)<<"   |"<<endl;
-    cout<<"        "<<infO(g,4,18)<<"      "<<infO(g,6,3)<<"     "<<infO(g,4,19)<<"      "<<infO(g,6,4)<<"     "<<infO(g,4,20)<<"      "<<infO(g,6,5)<<"     "<<infO(g,4,21)<<"      "<<infO(g,6,6)<<"     "<<infO(g,4,22)<<endl;
-    cout<<"         |     "<<infO(g,7,3)<<"    |     "<<infO(g,7,4)<<"    |     "<<infO(g,7,5)<<"    |     "<<infO(g,7,6)<<"    |"<<endl;
-    cout<<"        "<<infO(g,1,17)<<"             "<<infO(g,1,19)<<"             "<<infO(g,1,21)<<"             "<<infO(g,1,23)<<"             "<<infO(g,1,25)<<endl;
-    cout<<"       /   \\           /   \\           /   \\           /   \\           /   \\"<<endl;
-    cout<<"    "<<infO(g,2,23)<<"     "<<infO(g,3,24)<<"     "<<infO(g,2,25)<<"     "<<infO(g,3,26)<<"     "<<infO(g,2,27)<<"     "<<infO(g,3,28)<<"     "<<infO(g,2,29)<<"     "<<infO(g,3,30)<<"     "<<infO(g,2,31)<<"     "<<infO(g,3,32)<<endl;
-    cout<<"   /           \\   /           \\   /           \\   /           \\   /           \\"<<endl;
-    cout<<""<<infO(g,1,16)<<"             "<<infO(g,1,18)<<"             "<<infO(g,1,20)<<"             "<<infO(g,1,22)<<"             "<<infO(g,1,24)<<"             "<<infO(g,1,26)<<endl;
-    cout<<" |   "<<infO(g,5,7)<<"   |   "<<infO(g,5,8)<<"   |   "<<infO(g,5,9)<<"   |   "<<infO(g,5,10)<<"   |   "<<infO(g,5,11)<<"   |"<<endl;
-    cout<<""<<infO(g,4,33)<<"      "<<infO(g,6,7)<<"     "<<infO(g,4,34)<<"      "<<infO(g,6,8)<<"     "<<infO(g,4,35)<<"      "<<infO(g,6,9)<<"     "<<infO(g,4,36)<<"      "<<infO(g,6,10)<<"     "<<infO(g,4,37)<<"      "<<infO(g,6,11)<<"     "<<infO(g,4,38)<<endl;
-    cout<<" |     "<<infO(g,7,7)<<"    |     "<<infO(g,7,8)<<"    |     "<<infO(g,7,9)<<"    |     "<<infO(g,7,10)<<"    |     "<<infO(g,7,11)<<"    |"<<endl;
-    cout<<""<<infO(g,1,27)<<"             "<<infO(g,1,29)<<"             "<<infO(g,1,31)<<"             "<<infO(g,1,33)<<"             "<<infO(g,1,35)<<"             "<<infO(g,1,37)<<endl;
-    cout<<"   \\           /   \\           /   \\           /   \\           /   \\           /"<<endl;
-    cout<<"    "<<infO(g,3,39)<<"     "<<infO(g,2,40)<<"     "<<infO(g,3,41)<<"     "<<infO(g,2,42)<<"     "<<infO(g,3,43)<<"     "<<infO(g,2,44)<<"     "<<infO(g,3,45)<<"     "<<infO(g,2,46)<<"     "<<infO(g,3,47)<<"     "<<infO(g,2,48)<<""<<endl;
-    cout<<"       \\   /           \\   /           \\   /           \\   /           \\   /"<<endl;
-    cout<<"        "<<infO(g,1,28)<<"             "<<infO(g,1,30)<<"             "<<infO(g,1,32)<<"             "<<infO(g,1,34)<<"             "<<infO(g,1,36)<<endl;
-    cout<<"         |   "<<infO(g,5,12)<<"   |   "<<infO(g,5,13)<<"   |   "<<infO(g,5,14)<<"   |   "<<infO(g,5,15)<<"   |"<<endl;
-    cout<<"        "<<infO(g,4,49)<<"      "<<infO(g,6,12)<<"     "<<infO(g,4,50)<<"      "<<infO(g,6,13)<<"     "<<infO(g,4,51)<<"      "<<infO(g,6,14)<<"     "<<infO(g,4,52)<<"      "<<infO(g,6,15)<<"     "<<infO(g,4,53)<<"    ________________"<<endl;
-    cout<<"         |     "<<infO(g,7,12)<<"    |     "<<infO(g,7,13)<<"    |     "<<infO(g,7,14)<<"    |     "<<infO(g,7,15)<<"    |    | Player:        |"<<endl;
-    cout<<"        "<<infO(g,1,38)<<"             "<<infO(g,1,40)<<"             "<<infO(g,1,42)<<"             "<<infO(g,1,44)<<"             "<<infO(g,1,46)<<"   |----------------|"<<endl;
-    cout<<"           \\           /   \\           /   \\           /   \\           /      |   "<<infO(g,8,0)<<"|"<<endl;
-    cout<<"            "<<infO(g,3,54)<<"     "<<infO(g,2,55)<<"     "<<infO(g,3,56)<<"     "<<infO(g,2,57)<<"     "<<infO(g,3,58)<<"     "<<infO(g,2,59)<<"     "<<infO(g,3,60)<<"     "<<infO(g,2,61)<<"       |   ("<<g.currentPlayer<<")          |"<<endl;
-    cout<<"               \\   /           \\   /           \\   /           \\   /          |________________|"<<endl;
-    cout<<"                "<<infO(g,1,39)<<"             "<<infO(g,1,41)<<"             "<<infO(g,1,43)<<"             "<<infO(g,1,45)<<"           | Resources:     | "<<endl;
-    cout<<"                 |   "<<infO(g,5,16)<<"   |   "<<infO(g,5,17)<<"   |   "<<infO(g,5,18)<<"   |            |----------------|"<<endl;
-    cout<<"                "<<infO(g,4,62)<<"      "<<infO(g,6,16)<<"     "<<infO(g,4,63)<<"      "<<infO(g,6,17)<<"     "<<infO(g,4,64)<<"      "<<infO(g,6,18)<<"     "<<infO(g,4,65)<<"           |   Stone:  "<<infO(g,9,0)<<"    |"<<endl;
-    cout<<"                 |     "<<infO(g,7,16)<<"    |     "<<infO(g,7,17)<<"    |     "<<infO(g,7,18)<<"    |            |   Grain:  "<<infO(g,9,1)<<"    |"<<endl;
-    cout<<"                "<<infO(g,1,47)<<"             "<<infO(g,1,49)<<"             "<<infO(g,1,51)<<"             "<<infO(g,1,53)<<"           |   Lumber: "<<infO(g,9,2)<<"    |"<<endl;
-    cout<<"                   \\           /   \\           /   \\           /              |   Wool:   "<<infO(g,9,3)<<"    |"<<endl;
-    cout<<"                    "<<infO(g,3,66)<<"     "<<infO(g,2,67)<<"     "<<infO(g,3,68)<<"     "<<infO(g,2,69)<<"     "<<infO(g,3,70)<<"     "<<infO(g,2,71)<<"               |   Brick:  "<<infO(g,9,4)<<"    |"<<endl;
-    cout<<"                       \\   /           \\   /           \\   /                  |----------------|"<<endl;
-    cout<<"                        "<<infO(g,1,48)<<"             "<<infO(g,1,50)<<"             "<<infO(g,1,52)<<"                   | VictoryPts: "<<infO(g,10,0)<<"  |"<<endl;
-    cout<<"                                                                              |________________|"<<endl;
+    cout<<"                      \\                          /"<<endl;
+    cout<<"                        \\                      /"<<endl;
+    cout<<"                  "<<infO(g,11,0)<<"  \\                  /    "<<infO(g,11,1)<<endl;
+    cout<<"                   "<<infO(g,12,0)<<":1     "<<infO(g,1,1)<<"             "<<infO(g,1,3)<<"     "<<infO(g,12,1)<<":1    "<<infO(g,1,5)<< endl;
+    cout<<"              \\           /   \\           /   \\           /   \\ " << endl;
+    cout<<"                \\      "<<infO(g,2,0)<<"     "<<infO(g,3,1)<<"     "<<infO(g,2,2)<<"     "<<infO(g,3,3)<<"     "<<infO(g,2,4)<<"     "<<infO(g,3,5)<< endl;
+    cout<<"                  \\   /           \\   /           \\   /           \\ "<<endl;
+    cout<<"                   "<<infO(g,1,0)<<"             "<<infO(g,1,2)<<"             "<<infO(g,1,4)<<"             "<<infO(g,1,6)<<endl;
+    cout<<"                    |   "<<infO(g,5,0)<<"   |   "<<infO(g,5,1)<<"   |   "<<infO(g,5,2)<<"   |     /"<<endl;
+    cout<<"                   "<<infO(g,4,6)<<"      "<<infO(g,6,0)<<"     "<<infO(g,4,7)<<"      "<<infO(g,6,1)<<"     "<<infO(g,4,8)<<"      "<<infO(g,6,2)<<"     "<<infO(g,4,9)<<"  /"<<endl;
+    cout<<"                    |     "<<infO(g,7,0)<<"    |     "<<infO(g,7,1)<<"    |     "<<infO(g,7,2)<<"    | /   "<<infO(g,11,2)<<endl;
+    cout<<"                   "<<infO(g,1,8)<<"             "<<infO(g,1,10)<<"             "<<infO(g,1,12)<<"             "<<infO(g,1,14)<<"     "<<infO(g,12,2)<<":1"<<endl;
+    cout<<"                  /   \\           /   \\           /   \\           /   \\           /"<<endl;
+    cout<<"  _ _ _ _      "<<infO(g,2,10)<<"     "<<infO(g,3,11)<<"     "<<infO(g,2,12)<<"     "<<infO(g,3,13)<<"     "<<infO(g,2,14)<<"     "<<infO(g,3,15)<<"     "<<infO(g,2,16)<<"     "<<infO(g,3,17)<<"      /"<<endl;
+    cout<<"          \\   /           \\   /           \\   /           \\   /           \\   /"<<endl;
+    cout<<"           "<<infO(g,1,7)<<"             "<<infO(g,1,9)<<"             "<<infO(g,1,11)<<"             "<<infO(g,1,13)<<"             "<<infO(g,1,15)<<endl;
+    cout<<"    "<<infO(g,11,8)<<"  |   "<<infO(g,5,3)<<"   |   "<<infO(g,5,4)<<"   |   "<<infO(g,5,5)<<"   |   "<<infO(g,5,6)<<"   |"<<endl;
+    cout<<"     "<<infO(g,12,8)<<":1   "<<infO(g,4,18)<<"      "<<infO(g,6,3)<<"     "<<infO(g,4,19)<<"      "<<infO(g,6,4)<<"     "<<infO(g,4,20)<<"      "<<infO(g,6,5)<<"     "<<infO(g,4,21)<<"      "<<infO(g,6,6)<<"     "<<infO(g,4,22)<<endl;
+    cout<<"            |     "<<infO(g,7,3)<<"    |     "<<infO(g,7,4)<<"    |     "<<infO(g,7,5)<<"    |     "<<infO(g,7,6)<<"    |"<<endl;
+    cout<<"           "<<infO(g,1,17)<<"             "<<infO(g,1,19)<<"             "<<infO(g,1,21)<<"             "<<infO(g,1,23)<<"             "<<infO(g,1,25)<<endl;
+    cout<<"  _ _ _   /   \\           /   \\           /   \\           /   \\           /   \\"<<endl;
+    cout<<"       "<<infO(g,2,23)<<"     "<<infO(g,3,24)<<"     "<<infO(g,2,25)<<"     "<<infO(g,3,26)<<"     "<<infO(g,2,27)<<"     "<<infO(g,3,28)<<"     "<<infO(g,2,29)<<"     "<<infO(g,3,30)<<"     "<<infO(g,2,31)<<"     "<<infO(g,3,32)<<"      _ _ _ _"<<endl;
+    cout<<"      /           \\   /           \\   /           \\   /           \\   /           \\   /"<<endl;
+    cout<<"   "<<infO(g,1,16)<<"             "<<infO(g,1,18)<<"             "<<infO(g,1,20)<<"             "<<infO(g,1,22)<<"             "<<infO(g,1,24)<<"             "<<infO(g,1,26)<<endl;
+    cout<<"    |   "<<infO(g,5,7)<<"   |   "<<infO(g,5,8)<<"   |   "<<infO(g,5,9)<<"   |   "<<infO(g,5,10)<<"   |   "<<infO(g,5,11)<<"   |   "<<infO(g,11,3)<<endl;
+    cout<<"   "<<infO(g,4,33)<<"      "<<infO(g,6,7)<<"     "<<infO(g,4,34)<<"      "<<infO(g,6,8)<<"     "<<infO(g,4,35)<<"      "<<infO(g,6,9)<<"     "<<infO(g,4,36)<<"      "<<infO(g,6,10)<<"     "<<infO(g,4,37)<<"      "<<infO(g,6,11)<<"     "<<infO(g,4,38)<<"   "<<infO(g,12,3)<<":1"<<endl;
+    cout<<"    |     "<<infO(g,7,7)<<"    |     "<<infO(g,7,8)<<"    |     "<<infO(g,7,9)<<"    |     "<<infO(g,7,10)<<"    |     "<<infO(g,7,11)<<"    |"<<endl;
+    cout<<"   "<<infO(g,1,27)<<"             "<<infO(g,1,29)<<"             "<<infO(g,1,31)<<"             "<<infO(g,1,33)<<"             "<<infO(g,1,35)<<"             "<<infO(g,1,37)<<endl;
+    cout<<"      \\           /   \\           /   \\           /   \\           /   \\           /   \\ _ _ _ _"<<endl;
+    cout<<"  _ _ _"<<infO(g,3,39)<<"     "<<infO(g,2,40)<<"     "<<infO(g,3,41)<<"     "<<infO(g,2,42)<<"     "<<infO(g,3,43)<<"     "<<infO(g,2,44)<<"     "<<infO(g,3,45)<<"     "<<infO(g,2,46)<<"     "<<infO(g,3,47)<<"     "<<infO(g,2,48)<<""<<endl;
+    cout<<"          \\   /           \\   /           \\   /           \\   /           \\   /    "<<endl;
+    cout<<"           "<<infO(g,1,28)<<"             "<<infO(g,1,30)<<"             "<<infO(g,1,32)<<"             "<<infO(g,1,34)<<"             "<<infO(g,1,36)<<endl;
+    cout<<"    "<<infO(g,11,7)<<"  |   "<<infO(g,5,12)<<"   |   "<<infO(g,5,13)<<"   |   "<<infO(g,5,14)<<"   |   "<<infO(g,5,15)<<"   |"<<endl;
+    cout<<"     "<<infO(g,12,7)<<":1   "<<infO(g,4,49)<<"      "<<infO(g,6,12)<<"     "<<infO(g,4,50)<<"      "<<infO(g,6,13)<<"     "<<infO(g,4,51)<<"      "<<infO(g,6,14)<<"     "<<infO(g,4,52)<<"      "<<infO(g,6,15)<<"     "<<infO(g,4,53)<<"        ________________"<<endl;
+    cout<<"            |     "<<infO(g,7,12)<<"    |     "<<infO(g,7,13)<<"    |     "<<infO(g,7,14)<<"    |     "<<infO(g,7,15)<<"    |        | Player:        |"<<endl;
+    cout<<"           "<<infO(g,1,38)<<"             "<<infO(g,1,40)<<"             "<<infO(g,1,42)<<"             "<<infO(g,1,44)<<"             "<<infO(g,1,46)<<"       |----------------|"<<endl;
+    cout<<"  _ _ _ _ /   \\           /   \\           /   \\           /   \\           /   \\      |   "<<infO(g,8,0)<<"|"<<endl;
+    cout<<"               "<<infO(g,3,54)<<"     "<<infO(g,2,55)<<"     "<<infO(g,3,56)<<"     "<<infO(g,2,57)<<"     "<<infO(g,3,58)<<"     "<<infO(g,2,59)<<"     "<<infO(g,3,60)<<"     "<<infO(g,2,61)<<"      \\    |   ("<<g.currentPlayer<<")          |"<<endl;
+    cout<<"                  \\   /           \\   /           \\   /           \\   /   "<<infO(g,11,4)<<"  \\  |________________|"<<endl;
+    cout<<"                   "<<infO(g,1,39)<<"             "<<infO(g,1,41)<<"             "<<infO(g,1,43)<<"             "<<infO(g,1,45)<<"     "<<infO(g,12,4)<<":1       | Resources:     | "<<endl;
+    cout<<"                    |   "<<infO(g,5,16)<<"   |   "<<infO(g,5,17)<<"   |   "<<infO(g,5,18)<<"   | \\              |----------------|"<<endl;
+    cout<<"                   "<<infO(g,4,62)<<"      "<<infO(g,6,16)<<"     "<<infO(g,4,63)<<"      "<<infO(g,6,17)<<"     "<<infO(g,4,64)<<"      "<<infO(g,6,18)<<"     "<<infO(g,4,65)<<"  \\            |   Stone:  "<<infO(g,9,0)<<"    |"<<endl;
+    cout<<"                    |     "<<infO(g,7,16)<<"    |     "<<infO(g,7,17)<<"    |     "<<infO(g,7,18)<<"    |     \\          |   Grain:  "<<infO(g,9,1)<<"    |"<<endl;
+    cout<<"                   "<<infO(g,1,47)<<"             "<<infO(g,1,49)<<"             "<<infO(g,1,51)<<"             "<<infO(g,1,53)<<"               |   Lumber: "<<infO(g,9,2)<<"    |"<<endl;
+    cout<<"                  /   \\           /   \\           /   \\           /                  |   Wool:   "<<infO(g,9,3)<<"    |"<<endl;
+    cout<<"                /      "<<infO(g,3,66)<<"     "<<infO(g,2,67)<<"     "<<infO(g,3,68)<<"     "<<infO(g,2,69)<<"     "<<infO(g,3,70)<<"     "<<infO(g,2,71)<<"                   |   Brick:  "<<infO(g,9,4)<<"    |"<<endl;
+    cout<<"              /   "<<infO(g,11,6)<<"  \\   /           \\   /   "<<infO(g,11,5)<<"  \\   /                      |----------------|"<<endl;
+    cout<<"                   "<<infO(g,12,6)<<":1     "<<infO(g,1,48)<<"             "<<infO(g,1,50)<<"     "<<infO(g,12,5)<<":1     "<<infO(g,1,52)<<"                       | VictoryPts: "<<infO(g,10,0)<<"  |"<<endl;
+    cout<<"                          /                   \\                                      |________________|"<<endl;
+    cout<<"                        /                       \\"<<endl;
+    cout<<"                      /                           \\"<<endl;
     cout<<endl;
 }
 
+void printBoardGameState(Catan g){
+    return;
+}
 
+
+
+
+        /*-----------------------------------*\
+        |       infO (helper function)        |
+        \*-----------------------------------*/
 
 string infO(Catan GameProfile, int a, int b){
 
@@ -553,53 +582,69 @@ string infO(Catan GameProfile, int a, int b){
     if(a==1){             //a vertex
         if(GameProfile.board.vertLayer[b].occupiedBy==NOONE)
             result = " o ";
-        else if(GameProfile.board.vertLayer[b].occupiedBy==PLAYER0)
-            result = "-0-";
-        else if(GameProfile.board.vertLayer[b].occupiedBy==PLAYER1)
-            result = "-1-";
-        else if(GameProfile.board.vertLayer[b].occupiedBy==PLAYER2)
-            result = "-2-";
-        else if(GameProfile.board.vertLayer[b].occupiedBy==PLAYER3)
-            result = "-3-";
+        else if(GameProfile.board.vertLayer[b].occupiedBy==PLAYER0){
+            if(GameProfile.board.vertLayer[b].occByType==1)
+                result = "-0-";
+            else
+                result = "%0%";
+        }
+        else if(GameProfile.board.vertLayer[b].occupiedBy==PLAYER1){
+            if(GameProfile.board.vertLayer[b].occByType==1)
+                result = "-1-";
+            else
+                result = "%1%";
+        }
+        else if(GameProfile.board.vertLayer[b].occupiedBy==PLAYER2){
+            if(GameProfile.board.vertLayer[b].occByType==1)
+                result = "-2-";
+            else
+                result = "%2%";
+        }
+        else if(GameProfile.board.vertLayer[b].occupiedBy==PLAYER3){
+            if(GameProfile.board.vertLayer[b].occByType==1)
+                result = "-3-";
+            else
+                result = "%3%";
+        }
     }
 
     else if(a==2){        //a forward slash edge
         if(GameProfile.board.edgeLayer[b].occupiedBy==NOONE)
             result = " / ";
         else if(GameProfile.board.edgeLayer[b].occupiedBy==PLAYER0)
-            result = "-0-";
+            result = " 0 ";
         else if(GameProfile.board.edgeLayer[b].occupiedBy==PLAYER1)
-            result = "-1-";
+            result = " 1 ";
         else if(GameProfile.board.edgeLayer[b].occupiedBy==PLAYER2)
-            result = "-2-";
+            result = " 2 ";
         else if(GameProfile.board.edgeLayer[b].occupiedBy==PLAYER3)
-            result = "-3-";
+            result = " 3 ";
     }
 
     else if(a==3){        //a backward slash edge
         if(GameProfile.board.edgeLayer[b].occupiedBy==NOONE)
             result = " \\ ";
         else if(GameProfile.board.edgeLayer[b].occupiedBy==PLAYER0)
-            result = "-0-";
+            result = " 0 ";
         else if(GameProfile.board.edgeLayer[b].occupiedBy==PLAYER1)
-            result = "-1-";
+            result = " 1 ";
         else if(GameProfile.board.edgeLayer[b].occupiedBy==PLAYER2)
-            result = "-2-";
+            result = " 2 ";
         else if(GameProfile.board.edgeLayer[b].occupiedBy==PLAYER3)
-            result = "-3-";
+            result = " 3 ";
     }
 
     else if(a==4){        //a straight line edge
         if(GameProfile.board.edgeLayer[b].occupiedBy==NOONE)
             result = " | ";
         else if(GameProfile.board.edgeLayer[b].occupiedBy==PLAYER0)
-            result = "-0-";
+            result = " 0 ";
         else if(GameProfile.board.edgeLayer[b].occupiedBy==PLAYER1)
-            result = "-1-";
+            result = " 1 ";
         else if(GameProfile.board.edgeLayer[b].occupiedBy==PLAYER2)
-            result = "-2-";
+            result = " 2 ";
         else if(GameProfile.board.edgeLayer[b].occupiedBy==PLAYER3)
-            result = "-3-";
+            result = " 3 ";
     }
 
     else if(a==5){        //a terrtype
@@ -686,6 +731,28 @@ string infO(Catan GameProfile, int a, int b){
         stringstream ss;
         ss << GameProfile.turnplayerList[GameProfile.currentPlayer].victoryPoints;
         result = ss.str();
+    }
+
+    else if (a==11){      //Port's type
+        if(GameProfile.board.ports[b].type==0)
+            result = "Stone ";
+        if(GameProfile.board.ports[b].type==1)
+            result = "Grain ";
+        if(GameProfile.board.ports[b].type==2)
+            result = "Lumber";
+        if(GameProfile.board.ports[b].type==3)
+            result = "Wool  ";
+        if(GameProfile.board.ports[b].type==4)
+            result = "Brick ";
+        if(GameProfile.board.ports[b].type==5)
+            result = "      ";
+    }
+
+    else if (a==12){      //for Ports, whether it is 2:1 or 3:1
+        if(GameProfile.board.ports[b].type==5)
+            result = "3";
+        else
+            result = "2";
     }
     return result;
 }

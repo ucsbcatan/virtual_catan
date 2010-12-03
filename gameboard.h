@@ -66,6 +66,7 @@ class Gameboard {
   Gameboard(bool fromNewGame);
   int moveBandit(int hexNum);
   int getBanditLoc();
+  void setBanditLoc(int val);
   int validSettle(playerNum currPlayer, int vertNum);
   int validFirstSettle(playerNum currPlayer, int vertNum);
   int validRoad(playerNum currPlayer, int edgeNum);

@@ -1097,6 +1097,10 @@ int Gameboard::getBanditLoc()
     return banditLoc;
 }
 
+void Gameboard::setBanditLoc(int val){
+    banditLoc = val;
+}
+
 int Gameboard::validSettle(playerNum currPlayer, int vertNum)
 {
     //cout << "checking if occupied vertex\n";
@@ -1111,8 +1115,9 @@ int Gameboard::validSettle(playerNum currPlayer, int vertNum)
     }
     //cout << "checking for nearby roads\n";
     for (int i=0;i<(int)(vertLayer[vertNum].adjEdge.size());i++){
-        if ((edgeLayer[vertLayer[vertNum].adjEdge[i]].occupiedBy)!= currPlayer){ //whatever represents the current player
-            //cout << "finished checking for nearby roads\n";
+        if ((edgeLayer[vertLayer[vertNum].adjEdge[i]].occupiedBy)==currPlayer) //whatever represents the current player
+            break;
+        if(i==((int)(vertLayer[vertNum].adjEdge.size())-1)){
             return 3; //the player's road does not lead to this vertex, cout accordingly
         }
     }

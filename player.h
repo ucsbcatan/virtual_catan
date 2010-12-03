@@ -46,9 +46,11 @@ struct Dev {
 class Player{
 
 public:
+
+                         ////////MEMBER FUNCTIONS//////////
+
 Player();
 Player(string name);
-
 int getScore();
 int makeRoll();
 int pickRandCard();
@@ -63,17 +65,22 @@ void printHand();
 playerNum getTurn();
 string getName();
 
-bool hasLongestRoad;
-bool hasLargestArmy;
-resourceType resource;
-int devType;
-int numRoads;  //for longest road
-int victoryPoints;
-Dev DevHand;
-Dev DevPlayed;
-Piece PieceHand;
-Resources ResourceHand;
-vector<int> portsOwned;
+
+                       ////////DATA MEMBERS//////////
+
+
+    bool hasLongestRoad;
+    bool hasLargestArmy;
+    resourceType resource;
+    int devType;
+    int numRoads;  //for longest road
+    int victoryPoints;
+    Dev DevHand;
+    Dev DevPlayed;
+    Dev buffer;
+    Piece PieceHand;
+    Resources ResourceHand;
+    vector<int> portsOwned;
 
 
 private:
