@@ -9,7 +9,6 @@ Player::Player() {
 Player::Player(string name) {
 playerName = name;
 turnNum=NOONE;
-numRoads=0;
 victoryPoints = 0;
 }
 

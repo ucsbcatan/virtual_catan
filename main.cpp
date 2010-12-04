@@ -333,8 +333,9 @@ void Turn(Catan GameProfile, bool fromLoad){
         cout << "\nCurrent Player Turn is: " << GameProfile.turnplayerList[GameProfile.currentPlayer].getName() <<" ("<<GameProfile.currentPlayer<<")"<< endl;
         cout << "\nChoose from the following list of moves:";
 
-        cout<< "\n\nTrade\t\tBuild\t\tPlayDev\t\tBuyDev\t\tBuildingCosts\tSeeDevHand\nSaveGame\tEndTurn\t\tQuitGame\n   ";
+        cout<< "\n\nTrade\t\tBuild\t\tBuildingCosts\nBuyDev\t\tPlayDev\t\tSeeDevHand\nEndTurn\t\tSaveGame\tQuitGame\n   \t\t\t\t\t\t";
         cin>>input;
+        cout<<"\n\n";
         bool invalid;
         do{
             invalid=false;
@@ -399,8 +400,15 @@ void Turn(Catan GameProfile, bool fromLoad){
                 }while (invalidBuild==true);
             }
             else if (input.compare("PlayDev") == 0){
-             cout<<"oopsie! can't do that yet\n\n";
-            }
+                int numDevs=0;
+                numDevs=GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.soldierCard + GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.monopolyCard + GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.yearOfPlentyCard +
+                        GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.victoryPointCard + GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.roadBuildingCard;
+                            if (numDevs==0){
+                                cout << "You dont have any Development Cards to play.\n";
+                                continue;
+                            }
+                            GameProfile.playDev();
+                        }
             else if (input.compare("BuyDev") == 0 ){
                 if(GameProfile.sufficientRec("BuyDev")){
                     cout << "you have sufficient funds!\n";
@@ -410,11 +418,11 @@ void Turn(Catan GameProfile, bool fromLoad){
                     cout << "you don't have enough recourses dipshit!\n\n";
             }
             else if (input.compare("QuitGame")==0){
-                cout << "Are you sure you want to leave the game? (yes or no)";
+                cout << "Are you sure you want to leave the game? (yes or no) ";
                 string decide;
                 cin >> decide;
                 if (decide.compare("yes") == 0){
-                    cout<<"Do you want to save your game first? (yes or no)";
+                    cout<<"Do you want to save your game first? (yes or no) ";
                     string in;
                     cin >> in;
                     if(in.compare("yes")==0){
@@ -436,12 +444,13 @@ void Turn(Catan GameProfile, bool fromLoad){
             }
             else if (input.compare("SeeDevHand")==0){    //just for teeesting
                 cout << "\n\n";
-                cout << GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.soldierCard << " Soldier Cards\n";
-                cout << GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.victoryPointCard << " Victory Point Cards\n";
-                cout << GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.monopolyCard << " Monopoly Cards\n";
-                cout << GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.roadBuildingCard << " Road Building Cards\n";
-                cout << GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.yearOfPlentyCard << " Year Of Plenty Cards\n";
+                cout <<"  "<<GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.soldierCard << " Soldier Cards\n";
+                cout <<"  "<<GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.victoryPointCard << " Victory Point Cards\n";
+                cout <<"  "<<GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.monopolyCard << " Monopoly Cards\n";
+                cout <<"  "<<GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.roadBuildingCard << " Road Building Cards\n";
+                cout <<"  "<<GameProfile.turnplayerList[GameProfile.currentPlayer].DevHand.yearOfPlentyCard << " Year Of Plenty Cards\n";
                 cout << "\n\n";
+                delay(5);
             }
             else{
                 invalid=true;

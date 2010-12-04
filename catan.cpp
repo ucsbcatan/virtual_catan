@@ -91,7 +91,7 @@ void Catan::saveGame(){
     myfile << DevDeck.monopolyCard << " ";
     myfile << DevDeck.roadBuildingCard << " ";
     myfile << DevDeck.yearOfPlentyCard << " ";
-    myfile << DevDeck.size << " ";
+    myfile << DevDeck.size;
     myfile << "\n";
 
     //printing out gameboard information
@@ -195,7 +195,7 @@ void Catan::saveGame(){
 
         myfile << "\n";
 
-        //print player's turnNum
+        //print player's turnNum & numRoads
         myfile << (*k).getTurn();
         myfile << "\n";
 
@@ -978,6 +978,7 @@ void Catan::placeSettlement(Player& currPlayer, int vertNum){
         }
         cout << "settlement placed\n\n";
         currPlayer.victoryPoints++;
+        currPlayer.PieceHand.settlementPiece--;
     }
 return;
 }
@@ -1035,6 +1036,7 @@ void Catan::placeFirstSettlement(Player& currPlayer, int &vertNum){
         }
         cout<<"settlement placed\n\n";
         (currPlayer.victoryPoints)++;
+        currPlayer.PieceHand.settlementPiece--;
         return;
     }
 }
@@ -1056,7 +1058,8 @@ void Catan::placeRoad(Player currPlayer, int edgeNum){
 
     else {
         board.setRoad(currPlayer.getTurn(), edgeNum);
-        currPlayer.numRoads++;
+        currPlayer.PieceHand.roadPiece--;
+        setLongestRoad();
         cout<<"road placed\n\n";
         return;
     }
@@ -1073,25 +1076,52 @@ void Catan::placeCity(Player& currPlayer, int vertNum){
         board.setCity(currPlayer.getTurn(), vertNum);
         cout << "city placed\n";
         currPlayer.victoryPoints++;
+        currPlayer.PieceHand.cityPiece--;
     }
 }
 
 void Catan::setLongestRoad() {
+    int currGreatest = 5;
+    playerNum greatestPlayer = NOONE;
+    int numRoads=0;
 
+    for (vector<Player>::iterator it = turnplayerList.begin(); it != turnplayerList.end(); it++) {
+
+        numRoads = (13-((*it).PieceHand.roadPiece));
+
+        if(numRoads>currGreatest){
+            currGreatest = numRoads;
+
+            //remove honor and victory points from current greatestPlayer
+            if(greatestPlayer!=NOONE){
+                turnplayerList[greatestPlayer].hasLongestRoad = false;
+                turnplayerList[greatestPlayer].victoryPoints--;
+            }
+
+            //give honor and set new greatestPlayer
+            greatestPlayer=(*it).getTurn();
+            (*it).hasLongestRoad = true;
+            (*it).victoryPoints++;
+        }
+    }
 }
 
 void Catan::setLargestArmy(){
-    //if no one has a soldier card played, return
-    int currGreatest = 0;
+
+    int currGreatest = 2;
     playerNum greatestPlayer = NOONE;
+
     for (vector<Player>::iterator it = turnplayerList.begin(); it != turnplayerList.end(); it++) {
+
         if((*it).DevPlayed.soldierCard>currGreatest){
             currGreatest = (*it).DevPlayed.soldierCard;
+
             //remove honor and victory points from current greatestPlayer
             if(greatestPlayer!=NOONE){
                 turnplayerList[greatestPlayer].hasLargestArmy = false;
                 turnplayerList[greatestPlayer].victoryPoints--;
             }
+
             //give honor and set new greatestPlayer
             greatestPlayer=(*it).getTurn();
             (*it).hasLargestArmy = true;
@@ -1914,6 +1944,7 @@ void Catan::decideOrder() {
 }
 
 void Catan::endTurn(){
+    devBuffer();
     currentPlayer=(currentPlayer+1)%turnplayerList.size();
 }
 
@@ -2025,7 +2056,7 @@ void Catan::drawfromDevDeck(){
     cout << "In drawfromDevDeck()\n";
     if(result <= (DevDeck.soldierCard)){
         cout << "drawing soldier" << endl;
-        devIn(SOLDIER);          //I worry about passing in player this way.
+        devIn(SOLDIER);
         return;
     }
     else if (result <= ((DevDeck.soldierCard) + (DevDeck.victoryPointCard))){
@@ -2053,23 +2084,23 @@ void Catan::drawfromDevDeck(){
 
 void Catan::devIn(devType dt){
     if(dt==SOLDIER){
-        turnplayerList[currentPlayer].DevHand.soldierCard++;
+        turnplayerList[currentPlayer].DevBuffer.soldierCard++;
         DevDeck.soldierCard--;
     }
     else if(dt==VICTORYPOINT){
-        turnplayerList[currentPlayer].DevHand.victoryPointCard++;
+        turnplayerList[currentPlayer].DevBuffer.victoryPointCard++;
         DevDeck.victoryPointCard--;
     }
     else if(dt==MONOPOLY){
-        turnplayerList[currentPlayer].DevHand.monopolyCard++;
+        turnplayerList[currentPlayer].DevBuffer.monopolyCard++;
         DevDeck.monopolyCard--;
     }
     else if(dt==ROAD_BUILDING){
-        turnplayerList[currentPlayer].DevHand.roadBuildingCard++;
+        turnplayerList[currentPlayer].DevBuffer.roadBuildingCard++;
         DevDeck.roadBuildingCard--;
     }
     else if(dt==YEAR_OF_PLENTY){
-        turnplayerList[currentPlayer].DevHand.yearOfPlentyCard++;
+        turnplayerList[currentPlayer].DevBuffer.yearOfPlentyCard++;
         DevDeck.yearOfPlentyCard--;
     }
     DevDeck.size--;
@@ -2098,6 +2129,204 @@ void Catan::devOut(devType dt){
         turnplayerList[currentPlayer].DevHand.yearOfPlentyCard--;
     }
     DevDeck.size--;
+}
+
+void Catan::devBuffer(){
+
+    turnplayerList[currentPlayer].DevHand.soldierCard = (turnplayerList[currentPlayer].DevHand.soldierCard + turnplayerList[currentPlayer].DevBuffer.soldierCard);
+    turnplayerList[currentPlayer].DevBuffer.soldierCard = 0;
+
+    turnplayerList[currentPlayer].DevHand.victoryPointCard = (turnplayerList[currentPlayer].DevHand.victoryPointCard + turnplayerList[currentPlayer].DevBuffer.victoryPointCard);
+    turnplayerList[currentPlayer].DevBuffer.victoryPointCard = 0;
+
+    turnplayerList[currentPlayer].DevHand.monopolyCard = (turnplayerList[currentPlayer].DevHand.monopolyCard + turnplayerList[currentPlayer].DevBuffer.monopolyCard);
+    turnplayerList[currentPlayer].DevBuffer.monopolyCard = 0;
+
+    turnplayerList[currentPlayer].DevHand.roadBuildingCard = (turnplayerList[currentPlayer].DevHand.roadBuildingCard + turnplayerList[currentPlayer].DevBuffer.roadBuildingCard);
+    turnplayerList[currentPlayer].DevBuffer.roadBuildingCard = 0;
+
+    turnplayerList[currentPlayer].DevHand.yearOfPlentyCard = (turnplayerList[currentPlayer].DevHand.yearOfPlentyCard + turnplayerList[currentPlayer].DevBuffer.yearOfPlentyCard);
+    turnplayerList[currentPlayer].DevBuffer.yearOfPlentyCard = 0;
+}
+
+void Catan::playKnight(){
+    movingBandit();
+    turnplayerList[currentPlayer].DevHand.soldierCard--;
+    turnplayerList[currentPlayer].DevPlayed.soldierCard++;
+    setLargestArmy();
+}
+
+void Catan::playMono(){
+    string choice;
+    bool invalid;
+    int recCount;
+    cout << "Select a resource you would like to horde:\nStone\nGrain\nLumber\nWool\nBrick\n\t";
+    cin >> choice;
+    do{
+        invalid=false;
+        if (choice.compare("Stone")==0)
+            for (int i=0;i<(int)turnplayerList.size();i++){
+                if (i!=currentPlayer){
+                    recCount+=turnplayerList[i].ResourceHand.stone;
+                    turnplayerList[i].ResourceHand.stone=0;
+                }
+            }
+        else if (choice.compare("Grain")==0)
+            for (int i=0;i<(int)turnplayerList.size();i++){
+                if (i!=currentPlayer){
+                    recCount+=turnplayerList[i].ResourceHand.grain;
+                    turnplayerList[i].ResourceHand.grain=0;
+                }
+            }
+        else if (choice.compare("Lumber")==0)
+            for (int i=0;i<(int)turnplayerList.size();i++){
+                if (i!=currentPlayer){
+                    recCount+=turnplayerList[i].ResourceHand.lumber;
+                    turnplayerList[i].ResourceHand.lumber=0;
+                }
+            }
+        else if (choice.compare("Wool")==0)
+            for (int i=0;i<(int)turnplayerList.size();i++){
+                if (i!=currentPlayer){
+                    recCount+=turnplayerList[i].ResourceHand.wool;
+                    turnplayerList[i].ResourceHand.wool=0;
+                }
+            }
+        else if (choice.compare("Brick")==0)
+            for (int i=0;i<(int)turnplayerList.size();i++){
+                if (i!=currentPlayer){
+                    recCount+=turnplayerList[i].ResourceHand.brick;
+                    turnplayerList[i].ResourceHand.brick=0;
+                }
+            }
+        else {
+            cout << "Invalid selection. Please re-enter.\n";
+            cin >> choice;
+            invalid=true;
+        }
+    }while(invalid==true);
+    if (choice.compare("Stone")==0){
+        turnplayerList[currentPlayer].ResourceHand.stone+=recCount;
+        cout << "You received " << recCount << "Stone";
+    }
+    else if (choice.compare("Grain")==0){
+        turnplayerList[currentPlayer].ResourceHand.grain+=recCount;
+        cout << "You received " << recCount << "Grain";
+    }
+    else if (choice.compare("Lumber")==0){
+        turnplayerList[currentPlayer].ResourceHand.lumber+=recCount;
+        cout << "You received " << recCount << "Lumber";
+    }
+    else if (choice.compare("Wool")==0){
+        turnplayerList[currentPlayer].ResourceHand.wool+=recCount;
+        cout << "You received " << recCount << "Wool";
+    }
+    else if (choice.compare("Brick")==0){
+        turnplayerList[currentPlayer].ResourceHand.brick+=recCount;
+        cout << "You received " << recCount << "Brick";
+    }
+    turnplayerList[currentPlayer].DevHand.monopolyCard--;
+    turnplayerList[currentPlayer].DevPlayed.monopolyCard++;
+}
+
+void Catan::playRoadBuild(){
+    int counter=0;
+    while ((turnplayerList[currentPlayer].PieceHand.roadPiece!=0)&&(counter!=2)){
+        buildRoad();
+        counter++;
+    }
+    turnplayerList[currentPlayer].DevHand.roadBuildingCard--;
+    turnplayerList[currentPlayer].DevPlayed.roadBuildingCard++;
+}
+
+void Catan::playViCard(){
+    turnplayerList[currentPlayer].victoryPoints++;
+    turnplayerList[currentPlayer].DevHand.victoryPointCard--;
+    turnplayerList[currentPlayer].DevPlayed.victoryPointCard++;
+    checksForWinner();
+}
+
+void Catan::playYOP(){
+    string choice;
+    bool invalid;
+    cout << "Please select your first resource.\n\t";
+    cin >> choice;
+    do{
+        invalid=false;
+        if (choice.compare("Stone")==0)
+            turnplayerList[currentPlayer].ResourceHand.stone++;
+        else if (choice.compare("Grain")==0)
+            turnplayerList[currentPlayer].ResourceHand.grain++;
+        else if (choice.compare("Lumber")==0)
+            turnplayerList[currentPlayer].ResourceHand.lumber++;
+        else if (choice.compare("Wool")==0)
+            turnplayerList[currentPlayer].ResourceHand.wool++;
+        else if (choice.compare("Brick")==0)
+            turnplayerList[currentPlayer].ResourceHand.brick++;
+        else{
+            cout << "Invalid selection. Please re-enter.\n\t";
+            cin >> choice;
+            invalid=true;
+        }
+    }while(invalid==true);
+    cout << "Please select your second resource.\n\t";
+    cin >> choice;
+    do{
+        invalid=false;
+        if (choice.compare("Stone")==0)
+            turnplayerList[currentPlayer].ResourceHand.stone++;
+        else if (choice.compare("Grain")==0)
+            turnplayerList[currentPlayer].ResourceHand.grain++;
+        else if (choice.compare("Lumber")==0)
+            turnplayerList[currentPlayer].ResourceHand.lumber++;
+        else if (choice.compare("Wool")==0)
+            turnplayerList[currentPlayer].ResourceHand.wool++;
+        else if (choice.compare("Brick")==0)
+            turnplayerList[currentPlayer].ResourceHand.brick++;
+        else{
+            cout << "Invalid selection. Please re-enter.\n\t";
+            cin >> choice;
+            invalid=true;
+        }
+    }while(invalid==true);
+    turnplayerList[currentPlayer].DevHand.yearOfPlentyCard--;
+    turnplayerList[currentPlayer].DevPlayed.yearOfPlentyCard++;
+}
+
+void Catan::playDev(){
+    cout << "Please select a Development Card you would like to play:\n";
+    if (turnplayerList[currentPlayer].DevHand.soldierCard>0)
+        cout << "Knight\n";
+    if (turnplayerList[currentPlayer].DevHand.monopolyCard>0)
+        cout << "Monopoly\n";
+    if (turnplayerList[currentPlayer].DevHand.yearOfPlentyCard>0)
+        cout << "YearofPlenty\n";
+    if (turnplayerList[currentPlayer].DevHand.victoryPointCard>0)
+        cout << "VictoryPointCard\n";
+    if (turnplayerList[currentPlayer].DevHand.roadBuildingCard>0)
+        cout << "RoadBuilding\n";
+    cout << "\t";
+    string choice;
+    bool invalid;
+    cin >> choice;
+    do {
+        invalid=false;
+        if (choice.compare("RoadBuilding")==0)
+            playRoadBuild();
+        else if (choice.compare("VictoryPointCard")==0)
+            playViCard();
+        else if (choice.compare("Monopoly")==0)
+            playMono();
+        else if (choice.compare("Knight")==0)
+            playKnight();
+        else if (choice.compare("YearofPlenty")==0)
+            playYOP();
+        else {
+            cout << "Invalid selection. Please re-enter.\n\t";
+            cin >> choice;
+            invalid=true;
+        }
+    }while(invalid==true);
 }
 
 bool Catan::sufficientRec(string in){
@@ -2133,6 +2362,7 @@ bool Catan::checksForWinner() {
             return true; // or call declare winner function
         }
     }
+    return false;
 }
 
 void Catan::declareWinner(Player player) {
@@ -2150,29 +2380,35 @@ void Catan::declareWinner(Player player) {
     cout<<"   ******************************************"<<endl<<endl;
 }
 
+
+//This can Make your Resources have a negative value!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 void Catan::check7(int roll){
     if (!(roll==7))
         return;
     bool invalid;
     cout << "\t##################################\n\t##\tA 7 was rolled!!!\t##\n\t##################################\n";
+    delay(2);
     for (vector<Player>::iterator k =(turnplayerList).begin(); k!=(turnplayerList).end(); k++){
         int totalCards=((*k).ResourceHand.stone+(*k).ResourceHand.grain+(*k).ResourceHand.lumber+(*k).ResourceHand.wool+
                         (*k).ResourceHand.brick);
         if (totalCards>7){
+            delay(1);
             string choice;
             cout << (*k).getName() << " has " << totalCards << " resources. You must discard " << totalCards/2 << " of these.\n";
             for (int i=0;i<(totalCards/2);i++){
-                cout << "Please select a resource to discard:";
+                cout << "Please select a resource to discard:\n";
                 cout << "Stone= " << (*k).ResourceHand.stone << endl;
                 cout << "Grain= " << (*k).ResourceHand.grain << endl;
                 cout << "Lumber= " << (*k).ResourceHand.lumber << endl;
                 cout << "Wool= " << (*k).ResourceHand.wool << endl;
                 cout << "Brick= " << (*k).ResourceHand.brick << "\n\t";
                 cin >> choice;
-                do{
-                    invalid=false;
-                    if (choice.compare("Stone")==0)
-                        (*k).ResourceHand.stone--;
+                do{                                      //This can Make your Resources have a negative value!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    invalid=false;                       //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    if (choice.compare("Stone")==0)      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        (*k).ResourceHand.stone--;       //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     else if (choice.compare("Grain")==0)
                         (*k).ResourceHand.grain--;
                     else if (choice.compare("Lumber")==0)

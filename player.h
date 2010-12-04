@@ -73,11 +73,10 @@ string getName();
     bool hasLargestArmy;
     resourceType resource;
     int devType;
-    int numRoads;  //for longest road
     int victoryPoints;
     Dev DevHand;
     Dev DevPlayed;
-    Dev buffer;
+    Dev DevBuffer;
     Piece PieceHand;
     Resources ResourceHand;
     vector<int> portsOwned;

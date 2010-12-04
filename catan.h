@@ -44,8 +44,14 @@ public:
     Player * goesFirst(vector<Player> playerList);
     void drawfromDevDeck(); //
     void devIn(devType dt); //brings dev card from devdeck to player's buffer
-    void devIn2Hand(devType dt);
+    void devBuffer();
     void devOut(devType dt);//brings dev card from player's devhand to devplayed
+    void playKnight();
+    void playMono();
+    void playRoadBuild();
+    void playViCard();
+    void playYOP();
+    void playDev();
     bool sufficientRec(string in); //makes sure player has enough resources for building road, settlement, city, or devcard
     bool checksForWinner(); //called at the end of turn, checks to see if their is a winner with 8 points
     void declareWinner(Player player); //if checksForWinner is true, this function announces winner and exits the game
